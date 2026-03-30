@@ -46,3 +46,6 @@ Thumbs.db
 
 # Local npm config (contains corporate registry — not for CI)
 .npmrc
+
+# Package lock kept local — generated against corporate Nexus registry
+package-lock.json

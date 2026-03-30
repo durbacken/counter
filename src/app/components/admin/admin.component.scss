@@ -2,6 +2,8 @@
   position: sticky;
   top: 0;
   z-index: 100;
+  // iOS PWA: push content below the translucent status bar
+  padding-top: env(safe-area-inset-top);
 }
 
 .container {

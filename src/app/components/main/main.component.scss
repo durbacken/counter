@@ -2,6 +2,8 @@
   position: sticky;
   top: 0;
   z-index: 100;
+  // iOS PWA: push content below the translucent status bar
+  padding-top: env(safe-area-inset-top);
 
   .toolbar-title {
     font-size: 18px;
@@ -40,9 +42,7 @@
     flex: 1;
     font-size: 16px;
     min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    word-break: break-word;
   }
 
   .controls {

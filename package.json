@@ -32,6 +32,7 @@
     "@angular-devkit/build-angular": "^19.2.23",
     "@angular/cli": "^19.2.23",
     "@angular/compiler-cli": "^19.2.0",
+    "@resvg/resvg-js": "^2.6.2",
     "angular-eslint": "21.0.1",
     "eslint": "^9.39.1",
     "typescript": "~5.7.2",

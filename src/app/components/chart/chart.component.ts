@@ -15,15 +15,16 @@ function categoryColor(index: number): string {
   return `hsl(${(index * 137.5) % 360}, 60%, 55%)`;
 }
 
+
 @Component({
   selector: 'app-chart',
   template: `
-    <div class="chart-wrapper">
+    <div class="chart-wrapper" [style.height.px]="chartHeight">
       <canvas #canvas></canvas>
     </div>
   `,
   styles: [`
-    .chart-wrapper { position: relative; width: 100%; min-height: 200px; }
+    .chart-wrapper { position: relative; width: 100%; }
     canvas { display: block; }
   `]
 })
@@ -32,6 +33,13 @@ export class ChartComponent implements OnInit, OnChanges, OnDestroy {
   @ViewChild('canvas', { static: true }) canvasRef!: ElementRef<HTMLCanvasElement>;
 
   private chart?: Chart;
+
+  /** Grows with the number of categories so bars never squish together. */
+  get chartHeight(): number {
+    const BAR_HEIGHT = 36;
+    const OVERHEAD = 80; // title + x-axis
+    return Math.max(200, this.data.categories.length * BAR_HEIGHT + OVERHEAD);
+  }
 
   ngOnInit(): void {
     this.createChart();
@@ -58,8 +66,9 @@ export class ChartComponent implements OnInit, OnChanges, OnDestroy {
       type: 'bar',
       data: this.buildData(),
       options: {
+        indexAxis: 'y' as const,  // horizontal bar chart
         responsive: true,
-        maintainAspectRatio: true,
+        maintainAspectRatio: false,
         plugins: {
           legend: { display: false },
           title: {
@@ -71,16 +80,11 @@ export class ChartComponent implements OnInit, OnChanges, OnDestroy {
         },
         scales: {
           x: {
-            ticks: {
-              maxRotation: 45,
-              minRotation: 0,
-              autoSkip: true,
-              maxTicksLimit: 20
-            }
-          },
-          y: {
             beginAtZero: true,
             ticks: { stepSize: 1, precision: 0 }
+          },
+          y: {
+            ticks: { crossAlign: 'far' }
           }
         }
       }
