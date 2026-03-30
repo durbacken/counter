@@ -43,3 +43,6 @@ Thumbs.db
 
 # Claude Code
 .claude/
+
+# Local npm config (contains corporate registry — not for CI)
+.npmrc

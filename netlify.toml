@@ -4,5 +4,3 @@
 
 [build.environment]
   NODE_VERSION = "20"
-  # Override the local corporate registry — Netlify uses the public npm registry
-  NPM_CONFIG_REGISTRY = "https://registry.npmjs.org"
