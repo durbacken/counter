@@ -1,3 +1,4 @@
+@if (workspace) {
 <mat-toolbar color="primary" class="toolbar">
   <button mat-icon-button (click)="goBack()" aria-label="Tillbaka">
     <mat-icon>arrow_back</mat-icon>
@@ -7,88 +8,116 @@
 
 <div class="container">
 
-  <!-- ─── Titel ──────────────────────────────── -->
+  <!-- ─── Titel ──────────────────────────────────── -->
   <section class="section">
     <h2 class="section-title">Titel</h2>
     <mat-form-field appearance="outline" class="full-width">
-      <mat-label>Appens titel</mat-label>
-      <input matInput
-             [(ngModel)]="titleInput"
-             (blur)="saveTitle()"
-             (keydown.enter)="saveTitle()"
+      <mat-label>Arbetsytans namn</mat-label>
+      <input matInput [(ngModel)]="titleInput"
+             (blur)="saveTitle()" (keydown.enter)="saveTitle()"
              autocomplete="off" />
     </mat-form-field>
   </section>
 
   <mat-divider />
 
-  <!-- ─── Kategorier ────────────────────────── -->
+  <!-- ─── Kategorier ────────────────────────────── -->
   <section class="section">
     <h2 class="section-title">Kategorier</h2>
 
-    @if (data.categories.length === 0) {
-      <p class="no-categories">Inga kategorier än. Lägg till nedan.</p>
+    @if (workspace.categories.length === 0) {
+      <p class="no-items">Inga kategorier än. Lägg till nedan.</p>
     }
 
-    @for (category of data.categories; track category.id; let last = $last) {
-      <div class="category-item">
-
+    @for (category of workspace.categories; track category.id; let last = $last) {
+      <div class="list-item">
         @if (editingId === category.id) {
-          <!-- Edit mode -->
           <mat-form-field appearance="outline" class="edit-field">
-            <input matInput
-                   [(ngModel)]="editingName"
-                   (keydown.enter)="saveEdit()"
-                   (keydown.escape)="cancelEdit()"
-                   autocomplete="off"
-                   autofocus />
+            <input matInput [(ngModel)]="editingName"
+                   (keydown.enter)="saveEdit()" (keydown.escape)="cancelEdit()"
+                   autocomplete="off" autofocus />
           </mat-form-field>
-          <button mat-icon-button color="primary" (click)="saveEdit()" aria-label="Spara">
-            <mat-icon>check</mat-icon>
-          </button>
-          <button mat-icon-button (click)="cancelEdit()" aria-label="Avbryt">
-            <mat-icon>close</mat-icon>
-          </button>
-
+          <button mat-icon-button color="primary" (click)="saveEdit()"><mat-icon>check</mat-icon></button>
+          <button mat-icon-button (click)="cancelEdit()"><mat-icon>close</mat-icon></button>
         } @else {
-          <!-- Display mode -->
-          <div class="category-info">
-            <span class="category-name">{{ category.name }}</span>
-            <span class="category-count">{{ category.count }}</span>
+          <div class="item-info">
+            <span class="item-name">{{ category.name }}</span>
+            <span class="count-badge">{{ category.count }}</span>
           </div>
-          <button mat-icon-button (click)="startEdit(category)" aria-label="Redigera">
-            <mat-icon>edit</mat-icon>
-          </button>
-          <button mat-icon-button color="warn" (click)="confirmDelete(category)" aria-label="Ta bort">
-            <mat-icon>delete</mat-icon>
-          </button>
+          <button mat-icon-button (click)="startEdit(category)"><mat-icon>edit</mat-icon></button>
+          <button mat-icon-button color="warn" (click)="confirmDeleteCategory(category)"><mat-icon>delete</mat-icon></button>
         }
-
       </div>
-      @if (!last) {
-        <mat-divider />
-      }
+      @if (!last) { <mat-divider /> }
     }
 
-    <!-- ─── Lägg till ny kategori ──────────── -->
     <div class="add-row">
       <mat-form-field appearance="outline" class="add-field">
         <mat-label>Ny kategori</mat-label>
-        <input matInput
-               [(ngModel)]="newCategoryName"
+        <input matInput [(ngModel)]="newCategoryName"
                (keydown.enter)="addCategory()"
-               placeholder="Skriv namn..."
-               autocomplete="off" />
+               placeholder="Skriv namn..." autocomplete="off" />
       </mat-form-field>
-      <button mat-flat-button
-              color="primary"
-              class="add-btn"
-              (click)="addCategory()"
-              [disabled]="!newCategoryName.trim()">
-        <mat-icon>add</mat-icon>
-        Lägg till
+      <button mat-flat-button color="primary" class="add-btn"
+              (click)="addCategory()" [disabled]="!newCategoryName.trim()">
+        <mat-icon>add</mat-icon> Lägg till
       </button>
     </div>
-
   </section>
+
+  <mat-divider />
+
+  <!-- ─── Medlemmar ─────────────────────────────── -->
+  <section class="section">
+    <h2 class="section-title">Medlemmar</h2>
+
+    @for (uid of workspace.members; track uid) {
+      <div class="list-item">
+        <div class="item-info">
+          <span class="item-name">{{ workspace.memberEmails[uid] }}</span>
+          @if (uid === workspace.ownerId) {
+            <span class="owner-label">Ägare</span>
+          }
+        </div>
+        @if (isOwner && uid !== currentUserId) {
+          <button mat-icon-button color="warn" (click)="confirmRemoveMember(uid)">
+            <mat-icon>person_remove</mat-icon>
+          </button>
+        }
+      </div>
+      <mat-divider />
+    }
+
+    <!-- Invite -->
+    @if (isOwner) {
+      <div class="add-row">
+        <mat-form-field appearance="outline" class="add-field">
+          <mat-label>Bjud in via e-post</mat-label>
+          <input matInput [(ngModel)]="inviteEmail"
+                 (keydown.enter)="inviteMember()"
+                 type="email" placeholder="namn@exempel.se" autocomplete="off" />
+        </mat-form-field>
+        <button mat-flat-button color="primary" class="add-btn"
+                (click)="inviteMember()"
+                [disabled]="!inviteEmail.trim() || inviting">
+          <mat-icon>person_add</mat-icon> Bjud in
+        </button>
+      </div>
+      <p class="hint">Personen måste ha loggat in i appen minst en gång.</p>
+    }
+  </section>
+
+  <!-- ─── Fara ───────────────────────────────────── -->
+  @if (isOwner) {
+    <mat-divider />
+    <section class="section danger-section">
+      <h2 class="section-title danger-title">Farlig zon</h2>
+      <button mat-stroked-button color="warn" (click)="confirmDeleteWorkspace()">
+        <mat-icon>delete_forever</mat-icon>
+        Ta bort arbetsyta
+      </button>
+    </section>
+  }
+
 </div>
+}

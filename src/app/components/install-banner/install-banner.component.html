@@ -1,0 +1,33 @@
+@if (visible) {
+  <div class="banner">
+    <div class="banner-content">
+      <mat-icon class="banner-icon">install_mobile</mat-icon>
+
+      @if (isIos) {
+        <div class="banner-text">
+          <strong>Installera som app</strong>
+          <span>
+            Tryck på <mat-icon class="inline-icon">ios_share</mat-icon>
+            och välj <em>Lägg till på hemskärmen</em>
+          </span>
+        </div>
+      } @else {
+        <div class="banner-text">
+          <strong>Installera som app</strong>
+          <span>Få snabb åtkomst direkt från hemskärmen</span>
+        </div>
+      }
+    </div>
+
+    <div class="banner-actions">
+      @if (!isIos) {
+        <button mat-flat-button color="primary" (click)="install()">
+          Installera
+        </button>
+      }
+      <button mat-icon-button (click)="dismiss()" aria-label="Stäng">
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
+  </div>
+}

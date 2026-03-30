@@ -1,0 +1,128 @@
+.toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  padding-top: env(safe-area-inset-top);
+
+  .toolbar-title { font-size: 18px; font-weight: 500; }
+  .spacer { flex: 1; }
+}
+
+.container {
+  padding: 16px;
+  max-width: 640px;
+  margin: 0 auto;
+  padding-bottom: 96px; // room for FAB
+}
+
+.greeting {
+  font-size: 15px;
+  color: #757575;
+  margin: 0 0 16px;
+}
+
+/* ─── Workspace cards ────────────────────────────────── */
+.workspace-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.workspace-card {
+  cursor: pointer;
+  transition: box-shadow 0.15s;
+
+  &:active { box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+}
+
+.ws-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+
+  .ws-title {
+    font-size: 17px;
+    font-weight: 500;
+  }
+}
+
+.owner-badge, .shared-badge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.owner-badge {
+  background: #e3f2fd;
+  color: #1565c0;
+}
+
+.shared-badge {
+  background: #f3e5f5;
+  color: #6a1b9a;
+}
+
+.ws-meta {
+  display: flex;
+  gap: 16px;
+  color: #757575;
+  font-size: 13px;
+
+  span {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .meta-icon {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+  }
+}
+
+/* ─── New workspace form ─────────────────────────────── */
+.new-workspace-form {
+  background: white;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.12);
+  margin-bottom: 16px;
+
+  .full-width { width: 100%; }
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+/* ─── Empty state ────────────────────────────────────── */
+.empty-state {
+  text-align: center;
+  padding: 64px 16px;
+  color: #757575;
+
+  .empty-icon {
+    font-size: 72px;
+    width: 72px;
+    height: 72px;
+    opacity: 0.35;
+    margin-bottom: 16px;
+  }
+
+  p { font-size: 16px; margin-bottom: 24px; }
+}
+
+/* ─── FAB ────────────────────────────────────────────── */
+.fab {
+  position: fixed;
+  bottom: calc(24px + env(safe-area-inset-bottom));
+  right: 24px;
+}

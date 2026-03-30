@@ -1,0 +1,82 @@
+@if (user$ | async; as user) {
+  <mat-toolbar color="primary" class="toolbar">
+    <span class="toolbar-title">Räknare</span>
+    <span class="spacer"></span>
+    <button mat-icon-button (click)="signOut()" aria-label="Logga ut">
+      <mat-icon>logout</mat-icon>
+    </button>
+  </mat-toolbar>
+
+  <div class="container">
+    <p class="greeting">Hej, {{ user.displayName || user.email }}!</p>
+
+    @if (workspaces$ | async; as workspaces) {
+      @if (workspaces.length === 0 && !showNewForm) {
+        <div class="empty-state">
+          <mat-icon class="empty-icon">workspaces</mat-icon>
+          <p>Inga arbetsytor ännu.</p>
+          <button mat-flat-button color="primary" (click)="showNewForm = true">
+            <mat-icon>add</mat-icon>
+            Skapa din första
+          </button>
+        </div>
+      } @else {
+        <div class="workspace-list">
+          @for (ws of workspaces; track ws.id) {
+            <mat-card class="workspace-card" (click)="open(ws)">
+              <mat-card-content>
+                <div class="ws-header">
+                  <span class="ws-title">{{ ws.title }}</span>
+                  @if (isOwner(ws, user.uid)) {
+                    <span class="owner-badge">Ägare</span>
+                  } @else {
+                    <span class="shared-badge">Delad</span>
+                  }
+                </div>
+                <div class="ws-meta">
+                  <span>
+                    <mat-icon class="meta-icon">category</mat-icon>
+                    {{ ws.categories.length }} kategorier
+                  </span>
+                  <span>
+                    <mat-icon class="meta-icon">group</mat-icon>
+                    {{ ws.members.length }} {{ ws.members.length === 1 ? 'person' : 'personer' }}
+                  </span>
+                </div>
+              </mat-card-content>
+            </mat-card>
+          }
+        </div>
+      }
+    }
+
+    <!-- New workspace form -->
+    @if (showNewForm) {
+      <div class="new-workspace-form">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Namn på arbetsytan</mat-label>
+          <input matInput
+                 [(ngModel)]="newWorkspaceTitle"
+                 (keydown.enter)="createWorkspace()"
+                 autocomplete="off"
+                 autofocus />
+        </mat-form-field>
+        <div class="form-actions">
+          <button mat-button (click)="showNewForm = false; newWorkspaceTitle = ''">Avbryt</button>
+          <button mat-flat-button color="primary"
+                  (click)="createWorkspace()"
+                  [disabled]="!newWorkspaceTitle.trim()">
+            Skapa
+          </button>
+        </div>
+      </div>
+    }
+
+    @if (!showNewForm) {
+      <button mat-fab extended color="primary" class="fab" (click)="showNewForm = true">
+        <mat-icon>add</mat-icon>
+        Ny arbetsyta
+      </button>
+    }
+  </div>
+}

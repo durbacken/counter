@@ -6,7 +6,7 @@ import {
   Chart, BarController, BarElement,
   CategoryScale, LinearScale, Title, Tooltip
 } from 'chart.js';
-import { CounterData } from '../../models/counter.model';
+import { Workspace } from '../../models/counter.model';
 
 Chart.register(BarController, BarElement, CategoryScale, LinearScale, Title, Tooltip);
 
@@ -29,7 +29,7 @@ function categoryColor(index: number): string {
   `]
 })
 export class ChartComponent implements OnInit, OnChanges, OnDestroy {
-  @Input({ required: true }) data!: CounterData;
+  @Input({ required: true }) data!: Workspace;
   @ViewChild('canvas', { static: true }) canvasRef!: ElementRef<HTMLCanvasElement>;
 
   private chart?: Chart;
