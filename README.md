@@ -1,59 +1,180 @@
 # Counter
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 19.2.23.
+A Progressive Web App (PWA) for shared real-time counting across multiple people. Built for family use — create a workspace, add categories, and let everyone count together from their own device.
 
-## Development server
+The app UI is in Swedish.
 
-To start a local development server, run:
+## What it does
 
-```bash
-ng serve
+- Sign in with Google
+- Create named **workspaces** (e.g. "Family Counter")
+- Add **categories** to count (e.g. "Red cars", "Blue birds")
+- Increment or decrement each category — updates instantly for everyone sharing the workspace
+- Invite family members by email to join a workspace
+- View a horizontal bar chart of all counts
+- Export/share the chart as a PNG image
+- Install as a PWA on iPhone or Android (works like a native app)
+
+---
+
+## Tech stack
+
+### Frontend
+
+| What | Why |
+|------|-----|
+| **Angular 19** | Framework — standalone components, lazy-loaded routes |
+| **Angular Material 19** | UI components (toolbar, buttons, dialogs, forms) — azure-blue theme |
+| **Chart.js** | Horizontal bar chart for visualizing counts |
+| **Angular Service Worker** | PWA support — offline caching, installable on mobile |
+
+### Backend / Cloud
+
+| What | Why |
+|------|-----|
+| **Firebase Auth** | Google Sign-in — no passwords to manage |
+| **Cloud Firestore** | Real-time database — all count changes sync instantly across devices |
+
+### Hosting & CI/CD
+
+| What | Why |
+|------|-----|
+| **GitHub** (`durbacken/counter`) | Source control |
+| **Netlify** | Automatic deployment on every push to `main` |
+
+---
+
+## Architecture
+
+```
+src/
+  app/
+    components/
+      login/              # Google Sign-in screen
+      workspace-list/     # Home screen — list and create workspaces
+      main/               # Counter screen — increment/decrement/chart/export
+      admin/              # Settings — categories, members, invite, delete workspace
+      chart/              # Chart.js horizontal bar chart component
+      install-banner/     # PWA install prompt (iOS instructions / Android native)
+      confirm-dialog/     # Reusable confirmation dialog
+    guards/
+      auth.guard.ts       # Redirects unauthenticated users to /login
+    models/
+      counter.model.ts    # TypeScript interfaces: Workspace, Category, UserProfile
+    services/
+      auth.service.ts     # Firebase Auth — sign in, sign out, current user stream
+      workspace.service.ts # Firestore CRUD — workspaces, categories, members, invite
+  environments/
+    environment.ts        # Firebase config (dev)
+    environment.prod.ts   # Firebase config (prod) — swapped in at build time
 ```
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+### Data model (Firestore)
 
-## Code scaffolding
+```
+/users/{uid}
+  email: string
+  displayName: string
+  photoURL: string
 
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
-
-```bash
-ng generate component component-name
+/workspaces/{workspaceId}
+  title: string
+  ownerId: string
+  members: string[]             // list of uids
+  memberEmails: { uid: email }  // cached for display
+  categories: [
+    { id: string, name: string, count: number }
+  ]
 ```
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+Increment and decrement use **Firestore transactions** to prevent lost updates when multiple people count at the same time.
+
+---
+
+## Local development
+
+### Prerequisites
+
+- Node.js 20+
+- Access to the corporate Nexus npm registry (local `.npmrc` — not committed to git)
+
+### Install and run
 
 ```bash
-ng generate --help
+npm install
+npm start
 ```
 
-## Building
+App runs at `http://localhost:4200`.
 
-To build the project run:
+### Build for production
 
 ```bash
-ng build
+npm run build
 ```
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
+Output goes to `dist/counter/browser/`.
 
-## Running unit tests
+---
 
-To execute unit tests with the [Karma](https://karma-runner.github.io) test runner, use the following command:
+## Deployment
+
+Netlify builds and deploys automatically on every push to `main`.
+
+| Setting | Value |
+|---------|-------|
+| Build command | `npm install --include=dev && npm run build` |
+| Publish directory | `dist/counter/browser` |
+| Node version | 20 |
+
+The `package-lock.json` and `.npmrc` are **not committed** — they contain corporate Nexus registry URLs that would cause Netlify's npm to time out.
+
+---
+
+## Firebase setup
+
+### Authentication
+
+- Provider: Google Sign-in
+- Authorized domains must include the Netlify URL — set in Firebase Console → Authentication → Settings → Authorized domains
+
+### Firestore security rules
+
+```
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    match /users/{uid} {
+      allow read, write: if request.auth.uid == uid;
+    }
+
+    match /workspaces/{workspaceId} {
+      allow read, update: if request.auth.uid in resource.data.members;
+      allow create: if request.auth.uid != null;
+      allow delete: if request.auth.uid == resource.data.ownerId;
+    }
+  }
+}
+```
+
+---
+
+## PWA / Mobile
+
+- **iPhone**: open in Safari → Share → "Add to Home Screen"
+- **Android**: browser shows a native install prompt automatically
+- The toolbar accounts for iOS safe-area insets so it is not hidden behind the status bar
+- The install banner appears automatically on first visit and can be permanently dismissed
+
+---
+
+## Regenerating icons
+
+Icons are already committed. To regenerate them after editing `scripts/icon.svg`:
 
 ```bash
-ng test
+npm run icons
 ```
 
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
-
-```bash
-ng e2e
-```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+This uses `@resvg/resvg-js` to produce all PNG sizes and `favicon.ico`. This dependency is not installed on Netlify (icons are pre-committed), so it only needs to be run locally when the icon changes.
