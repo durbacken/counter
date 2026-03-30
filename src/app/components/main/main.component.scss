@@ -1,0 +1,116 @@
+.toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+
+  .toolbar-title {
+    font-size: 18px;
+    font-weight: 500;
+  }
+
+  .spacer {
+    flex: 1;
+  }
+}
+
+.container {
+  padding: 16px;
+  max-width: 640px;
+  margin: 0 auto;
+  padding-bottom: 32px;
+}
+
+/* ─── Category list ─────────────────────────────────── */
+.category-list {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
+  overflow: hidden;
+  margin-bottom: 16px;
+}
+
+.category-row {
+  display: flex;
+  align-items: center;
+  padding: 10px 16px;
+  gap: 12px;
+  min-height: 64px;
+
+  .category-name {
+    flex: 1;
+    font-size: 16px;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+  }
+
+  .count {
+    font-size: 22px;
+    font-weight: 600;
+    min-width: 40px;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .btn-decrement {
+    background-color: #eeeeee;
+    color: #555;
+    box-shadow: none;
+
+    &:disabled {
+      background-color: #f5f5f5;
+      color: #bdbdbd;
+    }
+  }
+}
+
+/* ─── Chart card ─────────────────────────────────────── */
+.chart-card {
+  margin-bottom: 16px;
+
+  mat-card-content {
+    padding-top: 8px;
+  }
+}
+
+/* ─── Action buttons ─────────────────────────────────── */
+.actions {
+  display: flex;
+  gap: 12px;
+
+  button {
+    flex: 1;
+    height: 48px;
+  }
+}
+
+/* ─── Empty state ────────────────────────────────────── */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 64px 16px;
+  color: #757575;
+  text-align: center;
+
+  .empty-icon {
+    font-size: 72px;
+    width: 72px;
+    height: 72px;
+    margin-bottom: 16px;
+    opacity: 0.35;
+  }
+
+  p {
+    font-size: 16px;
+    margin-bottom: 24px;
+  }
+}

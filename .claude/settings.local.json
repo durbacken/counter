@@ -1,0 +1,24 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ls -d /c/GIT/js-monorepo-resilience/apps/*)",
+      "Bash(ls -d /c/GIT/js-monorepo-resilience/libs/*)",
+      "Bash(xargs -I {} grep -l \"styleUrls\\\\|styles\" {})",
+      "Bash(grep -v \"//\")",
+      "Bash(ng version:*)",
+      "Bash(npm --version)",
+      "Bash(npx @angular/cli@19 version)",
+      "Bash(npx @angular/cli@19 new counter --directory . --style=scss --routing=false --skip-git --skip-install=false)",
+      "Bash(npm config:*)",
+      "Bash(npx ng:*)",
+      "Bash(npm install:*)",
+      "Bash(pkill -f \"ng serve\")",
+      "Bash(node scripts/generate-icons.mjs)",
+      "Bash(git --version)",
+      "Bash(gh --version)",
+      "Bash(git -C C:/private/counter config user.name)",
+      "Bash(git config:*)",
+      "Bash(curl -s https://api.github.com/users/durbacken)"
+    ]
+  }
+}

@@ -1,0 +1,73 @@
+@if (data$ | async; as data) {
+  <mat-toolbar color="primary" class="toolbar">
+    <span class="toolbar-title">{{ data.title }}</span>
+    <span class="spacer"></span>
+    <button mat-icon-button (click)="goToAdmin()" aria-label="Inställningar">
+      <mat-icon>settings</mat-icon>
+    </button>
+  </mat-toolbar>
+
+  <div class="container">
+
+    <!-- Category list -->
+    @if (data.categories.length > 0) {
+      <div class="category-list">
+        @for (category of data.categories; track category.id; let last = $last) {
+          <div class="category-row">
+            <span class="category-name">{{ category.name }}</span>
+            <div class="controls">
+              <button mat-mini-fab
+                      class="btn-decrement"
+                      [disabled]="category.count === 0"
+                      (click)="decrement(category.id)"
+                      aria-label="Minska">
+                <mat-icon>remove</mat-icon>
+              </button>
+              <span class="count">{{ category.count }}</span>
+              <button mat-mini-fab
+                      color="primary"
+                      (click)="increment(category.id)"
+                      aria-label="Öka">
+                <mat-icon>add</mat-icon>
+              </button>
+            </div>
+          </div>
+          @if (!last) {
+            <mat-divider />
+          }
+        }
+      </div>
+
+      <!-- Bar chart -->
+      <mat-card class="chart-card">
+        <mat-card-content>
+          <app-chart [data]="data" />
+        </mat-card-content>
+      </mat-card>
+
+      <!-- Action buttons -->
+      <div class="actions">
+        <button mat-stroked-button color="warn" (click)="confirmReset()">
+          <mat-icon>restart_alt</mat-icon>
+          Nollställ
+        </button>
+        <button mat-flat-button color="primary" (click)="exportShare()">
+          <mat-icon>share</mat-icon>
+          Dela / Exportera
+        </button>
+      </div>
+
+    } @else {
+      <!-- Empty state -->
+      <div class="empty-state">
+        <mat-icon class="empty-icon">bar_chart</mat-icon>
+        <p>Inga kategorier ännu.</p>
+        <button mat-flat-button color="primary" (click)="goToAdmin()">
+          <mat-icon>add</mat-icon>
+          Lägg till kategorier
+        </button>
+      </div>
+    }
+
+  </div>
+}

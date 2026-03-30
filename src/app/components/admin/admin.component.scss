@@ -1,0 +1,92 @@
+.toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.container {
+  padding: 16px;
+  max-width: 640px;
+  margin: 0 auto;
+  padding-bottom: 32px;
+}
+
+.section {
+  padding: 16px 0;
+}
+
+.section-title {
+  font-size: 14px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #757575;
+  margin: 0 0 12px;
+}
+
+.full-width {
+  width: 100%;
+}
+
+.no-categories {
+  color: #9e9e9e;
+  font-style: italic;
+  margin: 0 0 12px;
+}
+
+/* ─── Category items ─────────────────────────── */
+.category-item {
+  display: flex;
+  align-items: center;
+  padding: 4px 0;
+  gap: 4px;
+  min-height: 60px;
+
+  .category-info {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+  }
+
+  .category-name {
+    font-size: 16px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .category-count {
+    font-size: 13px;
+    font-weight: 500;
+    color: #1565c0;
+    background: #e3f2fd;
+    padding: 2px 8px;
+    border-radius: 12px;
+    flex-shrink: 0;
+  }
+
+  .edit-field {
+    flex: 1;
+    margin-bottom: -1.25em; // collapse mat-form-field bottom space
+  }
+}
+
+/* ─── Add new category row ───────────────────── */
+.add-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-top: 16px;
+
+  .add-field {
+    flex: 1;
+  }
+
+  .add-btn {
+    height: 56px; // match mat-form-field height
+    margin-top: 0;
+    flex-shrink: 0;
+  }
+}

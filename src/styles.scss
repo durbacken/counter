@@ -1,0 +1,17 @@
+html, body {
+  height: 100%;
+  margin: 0;
+  font-family: Roboto, "Helvetica Neue", sans-serif;
+  background-color: #f5f5f5;
+  -webkit-tap-highlight-color: transparent; // remove tap flash on iOS
+}
+
+* {
+  box-sizing: border-box;
+}
+
+// Ensure consistent touch-target size for icon buttons
+.mat-mdc-icon-button {
+  width: 48px !important;
+  height: 48px !important;
+}
