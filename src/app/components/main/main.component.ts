@@ -66,7 +66,7 @@ export class MainComponent {
 
   confirmReset(): void {
     this.dialog.open(ConfirmDialogComponent, {
-      data: { title: 'Nollställ', message: 'Vill du nollställa alla räknare?' }
+      data: { title: 'Nollställ', message: 'Vill du nollställa allt?' }
     }).afterClosed().subscribe(async confirmed => {
       if (!confirmed) return;
       const workspace = await firstValueFrom(this.workspace$);
