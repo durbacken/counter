@@ -11,8 +11,10 @@ import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
+import { MatDialog } from '@angular/material/dialog';
 import { AuthService } from '../../services/auth.service';
 import { WorkspaceService } from '../../services/workspace.service';
+import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog.component';
 import { Category, Workspace, WorkspaceMode } from '../../models/counter.model';
 
 @Component({
@@ -35,6 +37,7 @@ export class WorkspaceListComponent {
   private readonly auth = inject(AuthService);
   private readonly workspaceService = inject(WorkspaceService);
   private readonly router = inject(Router);
+  private readonly dialog = inject(MatDialog);
 
   readonly user$ = this.auth.user$;
   readonly workspaces$ = this.auth.user$.pipe(
@@ -45,6 +48,42 @@ export class WorkspaceListComponent {
   newWorkspaceMode: WorkspaceMode = 'counter';
   showNewForm = false;
 
+  // ── Swipe-to-reveal state ──────────────────────────────
+  swipedId: string | null = null;
+  private touchStartX = 0;
+  private touchStartY = 0;
+
+  onTouchStart(event: TouchEvent, id: string): void {
+    if (this.swipedId && this.swipedId !== id) {
+      this.swipedId = null; // close any other open card
+    }
+    this.touchStartX = event.touches[0].clientX;
+    this.touchStartY = event.touches[0].clientY;
+  }
+
+  onTouchEnd(event: TouchEvent, id: string): void {
+    const dx = event.changedTouches[0].clientX - this.touchStartX;
+    const dy = event.changedTouches[0].clientY - this.touchStartY;
+
+    // Only act on clearly horizontal swipes
+    if (Math.abs(dx) < Math.abs(dy)) return;
+
+    if (dx < -60) {
+      this.swipedId = id; // reveal action
+    } else if (dx > 20 && this.swipedId === id) {
+      this.swipedId = null; // swipe right to close
+    }
+  }
+
+  onCardClick(ws: Workspace): void {
+    if (this.swipedId === ws.id) {
+      this.swipedId = null; // tapping swiped card closes it
+      return;
+    }
+    this.open(ws);
+  }
+
+  // ── Actions ───────────────────────────────────────────
   open(workspace: Workspace): void {
     this.router.navigate(['/workspace', workspace.id]);
   }
@@ -60,6 +99,23 @@ export class WorkspaceListComponent {
     this.newWorkspaceMode = 'counter';
     this.showNewForm = false;
     this.router.navigate(['/workspace', id]);
+  }
+
+  confirmAction(ws: Workspace, uid: string): void {
+    this.swipedId = null;
+    if (this.isOwner(ws, uid)) {
+      this.dialog.open(ConfirmDialogComponent, {
+        data: { title: 'Ta bort arbetsyta', message: `Ta bort "${ws.title}"? Denna åtgärd kan inte ångras.` }
+      }).afterClosed().subscribe(async confirmed => {
+        if (confirmed) await this.workspaceService.deleteWorkspace(ws.id);
+      });
+    } else {
+      this.dialog.open(ConfirmDialogComponent, {
+        data: { title: 'Lämna arbetsyta', message: `Vill du lämna "${ws.title}"?` }
+      }).afterClosed().subscribe(async confirmed => {
+        if (confirmed) await this.workspaceService.removeMember(ws.id, uid, ws.members, ws.memberEmails);
+      });
+    }
   }
 
   isOwner(workspace: Workspace, uid: string): boolean {

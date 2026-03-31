@@ -23,35 +23,55 @@
       } @else {
         <div class="workspace-list">
           @for (ws of workspaces; track ws.id) {
-            <mat-card class="workspace-card" (click)="open(ws)">
-              <mat-card-content>
-                <div class="ws-header">
-                  <span class="ws-title">{{ ws.title }}</span>
-                  @if (isOwner(ws, user.uid)) {
-                    <span class="owner-badge">Ägare</span>
-                  } @else {
-                    <span class="shared-badge">Delad</span>
-                  }
-                </div>
-                <div class="ws-meta">
-                  @if ((ws.mode ?? 'counter') === 'checkbox') {
+            <div class="ws-swipe-wrapper"
+                 (touchstart)="onTouchStart($event, ws.id)"
+                 (touchend)="onTouchEnd($event, ws.id)">
+
+              <!-- Action revealed by swiping left -->
+              <div class="swipe-action"
+                   (click)="confirmAction(ws, user.uid); $event.stopPropagation()">
+                @if (isOwner(ws, user.uid)) {
+                  <mat-icon>delete</mat-icon>
+                  <span>Ta bort</span>
+                } @else {
+                  <mat-icon>exit_to_app</mat-icon>
+                  <span>Lämna</span>
+                }
+              </div>
+
+              <mat-card class="workspace-card"
+                        [class.swiped]="swipedId === ws.id"
+                        (click)="onCardClick(ws)">
+                <mat-card-content>
+                  <div class="ws-header">
+                    <span class="ws-title">{{ ws.title }}</span>
+                    @if (isOwner(ws, user.uid)) {
+                      <span class="owner-badge">Ägare</span>
+                    } @else {
+                      <span class="shared-badge">Delad</span>
+                    }
+                  </div>
+                  <div class="ws-meta">
+                    @if ((ws.mode ?? 'counter') === 'checkbox') {
+                      <span>
+                        <mat-icon class="meta-icon">check_box</mat-icon>
+                        {{ checkedCount(ws.categories) }} av {{ ws.categories.length }} klara
+                      </span>
+                    } @else {
+                      <span>
+                        <mat-icon class="meta-icon">tag</mat-icon>
+                        {{ ws.categories.length }} kategorier
+                      </span>
+                    }
                     <span>
-                      <mat-icon class="meta-icon">check_box</mat-icon>
-                      {{ checkedCount(ws.categories) }} av {{ ws.categories.length }} klara
+                      <mat-icon class="meta-icon">group</mat-icon>
+                      {{ ws.members.length }} {{ ws.members.length === 1 ? 'person' : 'personer' }}
                     </span>
-                  } @else {
-                    <span>
-                      <mat-icon class="meta-icon">tag</mat-icon>
-                      {{ ws.categories.length }} kategorier
-                    </span>
-                  }
-                  <span>
-                    <mat-icon class="meta-icon">group</mat-icon>
-                    {{ ws.members.length }} {{ ws.members.length === 1 ? 'person' : 'personer' }}
-                  </span>
-                </div>
-              </mat-card-content>
-            </mat-card>
+                  </div>
+                </mat-card-content>
+              </mat-card>
+
+            </div>
           }
         </div>
       }
