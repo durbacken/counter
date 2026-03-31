@@ -131,10 +131,16 @@ export class AdminComponent implements OnInit {
   }
 
   async inviteMember(): Promise<void> {
-    if (!this.inviteEmail.trim()) return;
+    if (!this.inviteEmail.trim() || !this.workspace) return;
     this.inviting = true;
     try {
-      await this.workspaceService.shareWithEmail(this.workspaceId, this.inviteEmail);
+      const inviterEmail = this.workspace.memberEmails[this.currentUserId] ?? this.currentUserId;
+      await this.workspaceService.shareWithEmail(
+        this.workspaceId,
+        this.inviteEmail,
+        this.workspace.title,
+        inviterEmail
+      );
       this.inviteEmail = '';
       this.snackbar.open('Inbjudan skickad!', 'Stäng', { duration: 3000 });
     } catch (e: any) {

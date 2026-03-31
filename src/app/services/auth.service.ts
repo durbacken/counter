@@ -1,7 +1,10 @@
 import { Injectable, inject } from '@angular/core';
 import { Router } from '@angular/router';
-import { Auth, GoogleAuthProvider, authState, signInWithPopup, signOut } from '@angular/fire/auth';
-import { Firestore, doc, setDoc } from '@angular/fire/firestore';
+import { Auth, GoogleAuthProvider, User, authState, signInWithPopup, signOut } from '@angular/fire/auth';
+import {
+  Firestore, collection, doc, getDocs, query,
+  setDoc, updateDoc, where, arrayUnion
+} from '@angular/fire/firestore';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -13,11 +16,7 @@ export class AuthService {
 
   async signInWithGoogle(): Promise<void> {
     const result = await signInWithPopup(this.auth, new GoogleAuthProvider());
-    await setDoc(doc(this.firestore, 'users', result.user.uid), {
-      email: result.user.email,
-      displayName: result.user.displayName,
-      photoURL: result.user.photoURL
-    }, { merge: true });
+    await this.onSignIn(result.user);
     // Navigation is handled by the login component watching user$ so that
     // the auth guard always sees an authenticated user when the route loads.
   }
@@ -25,5 +24,38 @@ export class AuthService {
   async signOut(): Promise<void> {
     await signOut(this.auth);
     await this.router.navigate(['/login']);
+  }
+
+  private async onSignIn(user: User): Promise<void> {
+    // Store/update profile so others can look them up by email
+    await setDoc(doc(this.firestore, 'users', user.uid), {
+      email: user.email,
+      displayName: user.displayName,
+      photoURL: user.photoURL
+    }, { merge: true });
+
+    // Process any pending invites for this email address
+    await this.processPendingInvites(user);
+  }
+
+  private async processPendingInvites(user: User): Promise<void> {
+    if (!user.email) return;
+    try {
+      const snap = await getDocs(query(
+        collection(this.firestore, 'invites'),
+        where('email', '==', user.email.toLowerCase()),
+        where('status', '==', 'pending')
+      ));
+      for (const invite of snap.docs) {
+        const data = invite.data();
+        await updateDoc(doc(this.firestore, 'workspaces', data['workspaceId']), {
+          members: arrayUnion(user.uid),
+          [`memberEmails.${user.uid}`]: user.email.toLowerCase()
+        });
+        await updateDoc(invite.ref, { status: 'accepted' });
+      }
+    } catch {
+      // Non-fatal — don't block sign-in if invite processing fails
+    }
   }
 }

@@ -2,16 +2,17 @@ import { Injectable, inject } from '@angular/core';
 import {
   Firestore, collection, doc, addDoc, updateDoc, deleteDoc,
   docData, collectionData, query, where, getDocs,
-  runTransaction, arrayUnion
+  runTransaction, arrayUnion, serverTimestamp
 } from '@angular/fire/firestore';
 import { Observable } from 'rxjs';
+import emailjs from '@emailjs/browser';
+import { environment } from '../../environments/environment';
 import { Category, Workspace } from '../models/counter.model';
 
 @Injectable({ providedIn: 'root' })
 export class WorkspaceService {
   private readonly firestore = inject(Firestore);
 
-  /** All workspaces the current user is a member of, live. */
   getWorkspaces(uid: string): Observable<Workspace[]> {
     const q = query(
       collection(this.firestore, 'workspaces'),
@@ -20,7 +21,6 @@ export class WorkspaceService {
     return collectionData(q, { idField: 'id' }) as Observable<Workspace[]>;
   }
 
-  /** A single workspace, live. */
   getWorkspace(id: string): Observable<Workspace> {
     return docData(
       doc(this.firestore, 'workspaces', id),
@@ -43,15 +43,10 @@ export class WorkspaceService {
     await updateDoc(doc(this.firestore, 'workspaces', workspaceId), { title });
   }
 
-  async addCategory(workspaceId: string, categories: Category[]): Promise<void> {
-    await updateDoc(doc(this.firestore, 'workspaces', workspaceId), { categories });
-  }
-
   async updateCategories(workspaceId: string, categories: Category[]): Promise<void> {
     await updateDoc(doc(this.firestore, 'workspaces', workspaceId), { categories });
   }
 
-  /** Uses a transaction so concurrent increments from multiple users are safe. */
   async increment(workspaceId: string, categoryId: string): Promise<void> {
     const ref = doc(this.firestore, 'workspaces', workspaceId);
     await runTransaction(this.firestore, async tx => {
@@ -80,26 +75,69 @@ export class WorkspaceService {
   }
 
   /**
-   * Share this workspace with a user by email.
-   * The user must have signed in at least once so their profile exists.
+   * Invite a user by email. If they already have an account they are added
+   * immediately. If not, a pending invite is stored and processed when they
+   * sign in for the first time. An email is sent in both cases.
    */
-  async shareWithEmail(workspaceId: string, email: string): Promise<void> {
-    const q = query(
+  async shareWithEmail(
+    workspaceId: string,
+    email: string,
+    workspaceTitle: string,
+    inviterEmail: string
+  ): Promise<void> {
+    const normalizedEmail = email.trim().toLowerCase();
+
+    const userSnap = await getDocs(query(
       collection(this.firestore, 'users'),
-      where('email', '==', email.trim().toLowerCase())
-    );
-    const snap = await getDocs(q);
-    if (snap.empty) {
-      throw new Error('Ingen användare hittades med den e-postadressen. Personen måste ha loggat in minst en gång.');
+      where('email', '==', normalizedEmail)
+    ));
+
+    if (!userSnap.empty) {
+      const uid = userSnap.docs[0].id;
+      await updateDoc(doc(this.firestore, 'workspaces', workspaceId), {
+        members: arrayUnion(uid),
+        [`memberEmails.${uid}`]: normalizedEmail
+      });
+    } else {
+      // Check for an existing pending invite to avoid duplicates
+      const existingSnap = await getDocs(query(
+        collection(this.firestore, 'invites'),
+        where('email', '==', normalizedEmail),
+        where('workspaceId', '==', workspaceId),
+        where('status', '==', 'pending')
+      ));
+      if (!existingSnap.empty) {
+        throw new Error('En inbjudan har redan skickats till denna e-postadress.');
+      }
+      await addDoc(collection(this.firestore, 'invites'), {
+        email: normalizedEmail,
+        workspaceId,
+        workspaceTitle,
+        invitedByEmail: inviterEmail,
+        status: 'pending',
+        createdAt: serverTimestamp()
+      });
     }
-    const uid = snap.docs[0].id;
-    await updateDoc(doc(this.firestore, 'workspaces', workspaceId), {
-      members: arrayUnion(uid),
-      [`memberEmails.${uid}`]: email.trim().toLowerCase()
-    });
+
+    await emailjs.send(
+      environment.emailjs.serviceId,
+      environment.emailjs.templateId,
+      {
+        to_email: normalizedEmail,
+        workspace_name: workspaceTitle,
+        from_name: inviterEmail,
+        app_link: environment.appUrl
+      },
+      environment.emailjs.publicKey
+    );
   }
 
-  async removeMember(workspaceId: string, uid: string, currentMembers: string[], currentEmails: { [uid: string]: string }): Promise<void> {
+  async removeMember(
+    workspaceId: string,
+    uid: string,
+    currentMembers: string[],
+    currentEmails: { [uid: string]: string }
+  ): Promise<void> {
     const members = currentMembers.filter(m => m !== uid);
     const memberEmails = { ...currentEmails };
     delete memberEmails[uid];
