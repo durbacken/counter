@@ -18,7 +18,8 @@ export class AuthService {
       displayName: result.user.displayName,
       photoURL: result.user.photoURL
     }, { merge: true });
-    await this.router.navigate(['/']);
+    // Navigation is handled by the login component watching user$ so that
+    // the auth guard always sees an authenticated user when the route loads.
   }
 
   async signOut(): Promise<void> {
