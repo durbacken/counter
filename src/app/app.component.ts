@@ -1,7 +1,6 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { InstallBannerComponent } from './components/install-banner/install-banner.component';
-import { AuthService } from './services/auth.service';
 
 @Component({
   selector: 'app-root',
@@ -12,10 +11,4 @@ import { AuthService } from './services/auth.service';
   `,
   styles: [':host { display: block; min-height: 100dvh; }']
 })
-export class AppComponent implements OnInit {
-  private readonly auth = inject(AuthService);
-
-  ngOnInit(): void {
-    this.auth.handleRedirectResult();
-  }
-}
+export class AppComponent {}
