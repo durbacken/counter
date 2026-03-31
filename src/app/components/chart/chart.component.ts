@@ -15,7 +15,6 @@ function categoryColor(index: number): string {
   return `hsl(${(index * 137.5) % 360}, 60%, 55%)`;
 }
 
-
 @Component({
   selector: 'app-chart',
   template: `
@@ -34,30 +33,26 @@ export class ChartComponent implements OnInit, OnChanges, OnDestroy {
 
   private chart?: Chart;
 
-  /** Grows with the number of categories so bars never squish together. */
   get chartHeight(): number {
     const BAR_HEIGHT = 36;
-    const OVERHEAD = 80; // title + x-axis
+    const OVERHEAD = 80;
     return Math.max(200, this.data.categories.length * BAR_HEIGHT + OVERHEAD);
   }
 
-  ngOnInit(): void {
-    this.createChart();
-  }
+  ngOnInit(): void { this.createChart(); }
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes['data'] && this.chart) {
-      this.refreshChart();
-    }
+    if (changes['data'] && this.chart) this.refreshChart();
   }
 
-  ngOnDestroy(): void {
-    this.chart?.destroy();
-  }
+  ngOnDestroy(): void { this.chart?.destroy(); }
 
-  /** Exposes the canvas for image export in the parent component. */
   getCanvas(): HTMLCanvasElement {
     return this.canvasRef.nativeElement;
+  }
+
+  private get isCheckbox(): boolean {
+    return (this.data.mode ?? 'counter') === 'checkbox';
   }
 
   private createChart(): void {
@@ -65,42 +60,35 @@ export class ChartComponent implements OnInit, OnChanges, OnDestroy {
     this.chart = new Chart(ctx, {
       type: 'bar',
       data: this.buildData(),
-      options: {
-        indexAxis: 'y' as const,  // horizontal bar chart
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: { display: false },
-          title: {
-            display: true,
-            text: this.data.title,
-            font: { size: 16, weight: 'bold' },
-            padding: { bottom: 12 }
-          }
-        },
-        scales: {
-          x: {
-            beginAtZero: true,
-            ticks: { stepSize: 1, precision: 0 }
-          },
-          y: {
-            ticks: { crossAlign: 'far' }
-          }
-        }
-      }
+      options: this.buildOptions()
     });
   }
 
   private refreshChart(): void {
     if (!this.chart) return;
     this.chart.data = this.buildData();
-    // Update title text via options
-    const titlePlugin = this.chart.options.plugins?.title;
-    if (titlePlugin) titlePlugin.text = this.data.title;
+    (this.chart.options as any) = this.buildOptions();
     this.chart.update();
   }
 
   private buildData() {
+    if (this.isCheckbox) {
+      return {
+        labels: this.data.categories.map(c => c.name),
+        datasets: [{
+          data: this.data.categories.map(() => 1),
+          backgroundColor: this.data.categories.map(c =>
+            c.checked ? '#4caf50' : '#e0e0e0'
+          ),
+          borderColor: this.data.categories.map(c =>
+            c.checked ? '#388e3c' : '#bdbdbd'
+          ),
+          borderWidth: 1,
+          borderRadius: 4
+        }]
+      };
+    }
+
     const colors = this.data.categories.map((_, i) => categoryColor(i));
     return {
       labels: this.data.categories.map(c => c.name),
@@ -111,6 +99,54 @@ export class ChartComponent implements OnInit, OnChanges, OnDestroy {
         borderWidth: 1,
         borderRadius: 4
       }]
+    };
+  }
+
+  private buildOptions() {
+    if (this.isCheckbox) {
+      const checked = this.data.categories.filter(c => c.checked).length;
+      const total = this.data.categories.length;
+      return {
+        indexAxis: 'y' as const,
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: { enabled: false },
+          title: {
+            display: true,
+            text: [this.data.title, `${checked} av ${total} klara`],
+            font: { size: 16, weight: 'bold' as const },
+            padding: { bottom: 12 }
+          }
+        },
+        scales: {
+          x: { display: false, max: 1 },
+          y: { ticks: { crossAlign: 'far' as const } }
+        }
+      };
+    }
+
+    return {
+      indexAxis: 'y' as const,
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        title: {
+          display: true,
+          text: this.data.title,
+          font: { size: 16, weight: 'bold' as const },
+          padding: { bottom: 12 }
+        }
+      },
+      scales: {
+        x: {
+          beginAtZero: true,
+          ticks: { stepSize: 1, precision: 0 }
+        },
+        y: { ticks: { crossAlign: 'far' as const } }
+      }
     };
   }
 }

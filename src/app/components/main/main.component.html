@@ -13,30 +13,51 @@
   <div class="container">
 
     @if (workspace.categories.length > 0) {
-      <div class="category-list">
-        @for (category of workspace.categories; track category.id; let last = $last) {
-          <div class="category-row">
-            <span class="category-name">{{ category.name }}</span>
-            <div class="controls">
-              <button mat-mini-fab
-                      class="btn-decrement"
-                      [disabled]="category.count === 0"
-                      (click)="decrement(category.id)"
-                      aria-label="Minska">
-                <mat-icon>remove</mat-icon>
-              </button>
-              <span class="count">{{ category.count }}</span>
-              <button mat-mini-fab
-                      color="primary"
-                      (click)="increment(category.id)"
-                      aria-label="Öka">
-                <mat-icon>add</mat-icon>
-              </button>
+
+      <!-- ─── Counter mode ───────────────────────────── -->
+      @if ((workspace.mode ?? 'counter') === 'counter') {
+        <div class="category-list">
+          @for (category of workspace.categories; track category.id; let last = $last) {
+            <div class="category-row">
+              <span class="category-name">{{ category.name }}</span>
+              <div class="controls">
+                <button mat-mini-fab
+                        class="btn-decrement"
+                        [disabled]="category.count === 0"
+                        (click)="decrement(category.id)"
+                        aria-label="Minska">
+                  <mat-icon>remove</mat-icon>
+                </button>
+                <span class="count">{{ category.count }}</span>
+                <button mat-mini-fab
+                        color="primary"
+                        (click)="increment(category.id)"
+                        aria-label="Öka">
+                  <mat-icon>add</mat-icon>
+                </button>
+              </div>
             </div>
-          </div>
-          @if (!last) { <mat-divider /> }
-        }
-      </div>
+            @if (!last) { <mat-divider /> }
+          }
+        </div>
+      }
+
+      <!-- ─── Checkbox mode ─────────────────────────── -->
+      @if ((workspace.mode ?? 'counter') === 'checkbox') {
+        <div class="category-list">
+          @for (category of workspace.categories; track category.id; let last = $last) {
+            <div class="category-row checkbox-row">
+              <mat-checkbox
+                [checked]="category.checked ?? false"
+                (change)="toggleCheck(category.id)"
+                class="category-checkbox">
+                {{ category.name }}
+              </mat-checkbox>
+            </div>
+            @if (!last) { <mat-divider /> }
+          }
+        </div>
+      }
 
       <mat-card class="chart-card">
         <mat-card-content>

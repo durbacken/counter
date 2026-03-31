@@ -34,10 +34,17 @@
                   }
                 </div>
                 <div class="ws-meta">
-                  <span>
-                    <mat-icon class="meta-icon">category</mat-icon>
-                    {{ ws.categories.length }} kategorier
-                  </span>
+                  @if ((ws.mode ?? 'counter') === 'checkbox') {
+                    <span>
+                      <mat-icon class="meta-icon">check_box</mat-icon>
+                      {{ checkedCount(ws.categories) }} av {{ ws.categories.length }} klara
+                    </span>
+                  } @else {
+                    <span>
+                      <mat-icon class="meta-icon">tag</mat-icon>
+                      {{ ws.categories.length }} kategorier
+                    </span>
+                  }
                   <span>
                     <mat-icon class="meta-icon">group</mat-icon>
                     {{ ws.members.length }} {{ ws.members.length === 1 ? 'person' : 'personer' }}
@@ -61,8 +68,28 @@
                  autocomplete="off"
                  autofocus />
         </mat-form-field>
+
+        <p class="field-label">Välj läge</p>
+        <mat-button-toggle-group [(ngModel)]="newWorkspaceMode" class="mode-toggle">
+          <mat-button-toggle value="counter">
+            <mat-icon>tag</mat-icon>
+            Räknare
+          </mat-button-toggle>
+          <mat-button-toggle value="checkbox">
+            <mat-icon>check_box</mat-icon>
+            Kryssrutor
+          </mat-button-toggle>
+        </mat-button-toggle-group>
+        <p class="mode-hint">
+          @if (newWorkspaceMode === 'counter') {
+            Räkna förekomster — varje kategori räknar upp och ned.
+          } @else {
+            Bocka av kategorier — markera vad som är klart eller ej.
+          }
+        </p>
+
         <div class="form-actions">
-          <button mat-button (click)="showNewForm = false; newWorkspaceTitle = ''">Avbryt</button>
+          <button mat-button (click)="showNewForm = false; newWorkspaceTitle = ''; newWorkspaceMode = 'counter'">Avbryt</button>
           <button mat-flat-button color="primary"
                   (click)="createWorkspace()"
                   [disabled]="!newWorkspaceTitle.trim()">

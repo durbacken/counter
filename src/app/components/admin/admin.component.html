@@ -8,6 +8,21 @@
 
 <div class="container">
 
+  <!-- ─── Läge ────────────────────────────────────── -->
+  <section class="section">
+    <h2 class="section-title">Läge</h2>
+    <div class="mode-display">
+      @if ((workspace.mode ?? 'counter') === 'counter') {
+        <mat-icon>tag</mat-icon><span>Räknare</span>
+      } @else {
+        <mat-icon>check_box</mat-icon><span>Kryssrutor</span>
+      }
+      <span class="mode-locked">(kan inte ändras)</span>
+    </div>
+  </section>
+
+  <mat-divider />
+
   <!-- ─── Titel ──────────────────────────────────── -->
   <section class="section">
     <h2 class="section-title">Titel</h2>
@@ -42,7 +57,9 @@
         } @else {
           <div class="item-info">
             <span class="item-name">{{ category.name }}</span>
-            <span class="count-badge">{{ category.count }}</span>
+            @if ((workspace.mode ?? 'counter') === 'counter') {
+              <span class="count-badge">{{ category.count }}</span>
+            }
           </div>
           <button mat-icon-button (click)="startEdit(category)"><mat-icon>edit</mat-icon></button>
           <button mat-icon-button color="warn" (click)="confirmDeleteCategory(category)"><mat-icon>delete</mat-icon></button>

@@ -60,6 +60,16 @@
     font-variant-numeric: tabular-nums;
   }
 
+  &.checkbox-row {
+    padding: 12px 16px;
+    min-height: 56px;
+  }
+
+  .category-checkbox {
+    flex: 1;
+    font-size: 16px;
+  }
+
   .btn-decrement {
     background-color: #eeeeee;
     color: #555;

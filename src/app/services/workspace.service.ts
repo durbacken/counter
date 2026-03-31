@@ -7,7 +7,7 @@ import {
 import { Observable } from 'rxjs';
 import emailjs from '@emailjs/browser';
 import { environment } from '../../environments/environment';
-import { Category, Workspace } from '../models/counter.model';
+import { Category, Workspace, WorkspaceMode } from '../models/counter.model';
 
 @Injectable({ providedIn: 'root' })
 export class WorkspaceService {
@@ -28,13 +28,14 @@ export class WorkspaceService {
     ) as Observable<Workspace>;
   }
 
-  async createWorkspace(title: string, uid: string, email: string): Promise<string> {
+  async createWorkspace(title: string, uid: string, email: string, mode: WorkspaceMode): Promise<string> {
     const ref = await addDoc(collection(this.firestore, 'workspaces'), {
       title,
       ownerId: uid,
       members: [uid],
       memberEmails: { [uid]: email },
-      categories: []
+      categories: [],
+      mode
     });
     return ref.id;
   }
@@ -69,9 +70,20 @@ export class WorkspaceService {
     });
   }
 
+  async toggleCheck(workspaceId: string, categoryId: string): Promise<void> {
+    const ref = doc(this.firestore, 'workspaces', workspaceId);
+    await runTransaction(this.firestore, async tx => {
+      const snap = await tx.get(ref);
+      const categories = (snap.data()!['categories'] as Category[]).map(c =>
+        c.id === categoryId ? { ...c, checked: !c.checked } : c
+      );
+      tx.update(ref, { categories });
+    });
+  }
+
   async reset(workspaceId: string, categories: Category[]): Promise<void> {
-    const zeroed = categories.map(c => ({ ...c, count: 0 }));
-    await updateDoc(doc(this.firestore, 'workspaces', workspaceId), { categories: zeroed });
+    const cleared = categories.map(c => ({ ...c, count: 0, checked: false }));
+    await updateDoc(doc(this.firestore, 'workspaces', workspaceId), { categories: cleared });
   }
 
   /**

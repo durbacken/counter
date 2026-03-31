@@ -7,6 +7,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatCardModule } from '@angular/material/card';
 import { MatDividerModule } from '@angular/material/divider';
+import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatDialog } from '@angular/material/dialog';
 import { WorkspaceService } from '../../services/workspace.service';
 import { ChartComponent } from '../chart/chart.component';
@@ -21,6 +22,7 @@ import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog.compone
     MatIconModule,
     MatCardModule,
     MatDividerModule,
+    MatCheckboxModule,
     ChartComponent
   ],
   templateUrl: './main.component.html',
@@ -48,6 +50,10 @@ export class MainComponent {
 
   decrement(categoryId: string): void {
     this.workspaceService.decrement(this.workspaceId, categoryId);
+  }
+
+  toggleCheck(categoryId: string): void {
+    this.workspaceService.toggleCheck(this.workspaceId, categoryId);
   }
 
   goBack(): void {

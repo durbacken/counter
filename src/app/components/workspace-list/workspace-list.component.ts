@@ -1,19 +1,19 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { AsyncPipe } from '@angular/common';
 import { Router } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
+import { switchMap } from 'rxjs/operators';
+import { FormsModule } from '@angular/forms';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatCardModule } from '@angular/material/card';
-import { MatDialog } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { FormsModule } from '@angular/forms';
-import { switchMap } from 'rxjs/operators';
+import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { AuthService } from '../../services/auth.service';
 import { WorkspaceService } from '../../services/workspace.service';
-import { Workspace } from '../../models/counter.model';
+import { Category, Workspace, WorkspaceMode } from '../../models/counter.model';
 
 @Component({
   selector: 'app-workspace-list',
@@ -26,6 +26,7 @@ import { Workspace } from '../../models/counter.model';
     MatCardModule,
     MatFormFieldModule,
     MatInputModule,
+    MatButtonToggleModule,
   ],
   templateUrl: './workspace-list.component.html',
   styleUrl: './workspace-list.component.scss'
@@ -41,6 +42,7 @@ export class WorkspaceListComponent {
   );
 
   newWorkspaceTitle = '';
+  newWorkspaceMode: WorkspaceMode = 'counter';
   showNewForm = false;
 
   open(workspace: Workspace): void {
@@ -51,14 +53,21 @@ export class WorkspaceListComponent {
     const title = this.newWorkspaceTitle.trim();
     if (!title) return;
     const user = await firstValueFrom(this.user$);
-    const id = await this.workspaceService.createWorkspace(title, user!.uid, user!.email!);
+    const id = await this.workspaceService.createWorkspace(
+      title, user!.uid, user!.email!, this.newWorkspaceMode
+    );
     this.newWorkspaceTitle = '';
+    this.newWorkspaceMode = 'counter';
     this.showNewForm = false;
     this.router.navigate(['/workspace', id]);
   }
 
   isOwner(workspace: Workspace, uid: string): boolean {
     return workspace.ownerId === uid;
+  }
+
+  checkedCount(categories: Category[]): number {
+    return categories.filter(c => c.checked).length;
   }
 
   signOut(): void {

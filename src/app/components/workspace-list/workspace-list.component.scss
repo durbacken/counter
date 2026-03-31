@@ -97,6 +97,27 @@
   .full-width { width: 100%; }
 }
 
+.field-label {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #757575;
+  margin: 0 0 8px;
+}
+
+.mode-toggle {
+  width: 100%;
+
+  mat-button-toggle { flex: 1; }
+}
+
+.mode-hint {
+  font-size: 13px;
+  color: #757575;
+  margin: 8px 0 16px;
+}
+
 .form-actions {
   display: flex;
   justify-content: flex-end;
