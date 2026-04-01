@@ -18,11 +18,20 @@
   }
 }
 
+.page-wrapper {
+  display: flex;
+  flex-direction: column;
+  min-height: calc(100dvh - 56px - env(safe-area-inset-top));
+}
+
 .container {
+  flex: 1;
   padding: 16px;
   max-width: 640px;
+  width: 100%;
   margin: 0 auto;
   padding-bottom: 32px;
+  box-sizing: border-box;
 }
 
 /* ─── Category list ─────────────────────────────────── */
@@ -83,6 +92,28 @@
       color: #bdbdbd;
     }
   }
+}
+
+/* ─── Checkbox progress summary ─────────────────────── */
+.progress-summary {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.progress-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+  color: #424242;
+  margin-bottom: 10px;
+}
+
+.progress-pct {
+  font-weight: 600;
+  color: #1976d2;
 }
 
 /* ─── Chart card ─────────────────────────────────────── */

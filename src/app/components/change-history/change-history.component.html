@@ -1,0 +1,41 @@
+@if (categoryHistories.length > 0) {
+  <div class="history-section">
+    <h3 class="history-heading">Historik</h3>
+    <mat-accordion multi>
+      @for (hist of categoryHistories; track hist.category.id) {
+        <mat-expansion-panel>
+          <mat-expansion-panel-header>
+            <mat-panel-title>{{ hist.category.name }}</mat-panel-title>
+            <mat-panel-description>
+              <span class="summary">
+                {{ hist.changes.length }} ändringar
+                @if (showComments && hist.commentCount > 0) {
+                  <span class="comment-badge">
+                    <mat-icon class="badge-icon">comment</mat-icon>
+                    {{ hist.commentCount }}
+                  </span>
+                }
+              </span>
+            </mat-panel-description>
+          </mat-expansion-panel-header>
+
+          <div class="change-list">
+            @for (change of hist.changes; track change.id) {
+              <div class="change-item">
+                <div class="change-top">
+                  <span class="change-value">{{ describeChange(change) }}</span>
+                  <span class="change-time">{{ getDate(change.timestamp) | date:'d MMM, HH:mm' }}</span>
+                </div>
+                <div class="change-user">{{ change.userEmail }}</div>
+                @if (showComments && change.comment) {
+                  <div class="change-comment">"{{ change.comment }}"</div>
+                }
+              </div>
+            }
+          </div>
+
+        </mat-expansion-panel>
+      }
+    </mat-accordion>
+  </div>
+}

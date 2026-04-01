@@ -6,15 +6,31 @@
   height: auto !important;
   min-height: 56px;
 
+  .toolbar-logo {
+    width: 28px;
+    height: 28px;
+    border-radius: 7px;
+    margin-right: 8px;
+  }
+
   .toolbar-title { font-size: 18px; font-weight: 500; }
   .spacer { flex: 1; }
 }
 
+.page-wrapper {
+  display: flex;
+  flex-direction: column;
+  min-height: calc(100dvh - 56px - env(safe-area-inset-top));
+}
+
 .container {
+  flex: 1;
   padding: 16px;
   max-width: 640px;
+  width: 100%;
   margin: 0 auto;
-  padding-bottom: 96px; // room for FAB
+  padding-bottom: 8px;
+  box-sizing: border-box;
 }
 
 .greeting {
@@ -176,25 +192,35 @@
   p { font-size: 16px; margin-bottom: 24px; }
 }
 
+.example-toggle {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  margin-top: 12px;
+  font-size: 13px;
+  color: #9e9e9e;
+
+  mat-icon { font-size: 18px; width: 18px; height: 18px; }
+}
+
+.example-choices {
+  display: flex;
+  gap: 10px;
+  margin-top: 8px;
+  justify-content: center;
+
+  button { font-size: 13px; color: #757575; border-color: #e0e0e0; }
+}
+
 /* ─── FAB ────────────────────────────────────────────── */
+.fab-row {
+  display: flex;
+  justify-content: flex-end;
+  padding: 8px 16px 16px;
+}
+
 .fab {
-  position: fixed;
-  bottom: calc(24px + env(safe-area-inset-bottom));
-  right: 24px;
+  height: 48px;
+  min-width: 180px;
 }
 
-/* ─── About footer ──────────────────────────────────── */
-.about {
-  margin-top: 48px;
-  font-size: 12px;
-  color: #bdbdbd;
-  text-align: center;
-  line-height: 1.6;
-
-  a {
-    color: #bdbdbd;
-    text-decoration: none;
-
-    &:hover { text-decoration: underline; }
-  }
-}

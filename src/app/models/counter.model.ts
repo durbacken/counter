@@ -17,6 +17,10 @@ export interface Workspace {
   /** Maps uid → email for display purposes. */
   memberEmails: { [uid: string]: string };
   categories: Category[];
+  /** Show comment dialog after each change. History is always saved regardless. */
+  enableComments?: boolean;
+  /** Show the per-category history accordion. History is always saved regardless. */
+  enableHistory?: boolean;
 }
 
 export interface UserProfile {
@@ -24,4 +28,20 @@ export interface UserProfile {
   email: string;
   displayName: string | null;
   photoURL: string | null;
+}
+
+export type ChangeType = 'increment' | 'decrement' | 'toggle_on' | 'toggle_off';
+
+export interface ChangeEvent {
+  id: string;
+  workspaceId: string;
+  categoryId: string;
+  categoryName: string;
+  changeType: ChangeType;
+  previousValue: number | boolean;
+  newValue: number | boolean;
+  userId: string;
+  userEmail: string;
+  timestamp: any; // Firestore Timestamp
+  comment?: string;
 }

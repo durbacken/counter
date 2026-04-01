@@ -71,10 +71,16 @@ export class ChartComponent implements OnInit, OnChanges, OnDestroy {
     this.chart.update();
   }
 
+  private truncateLabel(name: string, max = 18): string {
+    return name.length > max ? name.slice(0, max - 1) + '…' : name;
+  }
+
   private buildData() {
+    const labels = this.data.categories.map(c => this.truncateLabel(c.name));
+
     if (this.isCheckbox) {
       return {
-        labels: this.data.categories.map(c => c.name),
+        labels,
         datasets: [{
           data: this.data.categories.map(() => 1),
           backgroundColor: this.data.categories.map(c =>
@@ -91,7 +97,7 @@ export class ChartComponent implements OnInit, OnChanges, OnDestroy {
 
     const colors = this.data.categories.map((_, i) => categoryColor(i));
     return {
-      labels: this.data.categories.map(c => c.name),
+      labels,
       datasets: [{
         data: this.data.categories.map(c => c.count),
         backgroundColor: colors,
@@ -127,6 +133,7 @@ export class ChartComponent implements OnInit, OnChanges, OnDestroy {
       };
     }
 
+    const categories = this.data.categories;
     return {
       indexAxis: 'y' as const,
       responsive: true,
@@ -138,6 +145,11 @@ export class ChartComponent implements OnInit, OnChanges, OnDestroy {
           text: this.data.title,
           font: { size: 16, weight: 'bold' as const },
           padding: { bottom: 12 }
+        },
+        tooltip: {
+          callbacks: {
+            title: (items: any[]) => categories[items[0].dataIndex]?.name ?? ''
+          }
         }
       },
       scales: {

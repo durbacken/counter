@@ -49,3 +49,6 @@ Thumbs.db
 
 # Package lock kept local — generated against corporate Nexus registry
 package-lock.json
+
+# Local scratch notes (contains personal URLs and credentials)
+todo.txt

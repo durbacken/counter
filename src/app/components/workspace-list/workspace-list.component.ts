@@ -15,6 +15,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { AuthService } from '../../services/auth.service';
 import { WorkspaceService } from '../../services/workspace.service';
 import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog.component';
+import { FooterComponent } from '../footer/footer.component';
 import { Category, Workspace, WorkspaceMode } from '../../models/counter.model';
 
 @Component({
@@ -29,6 +30,7 @@ import { Category, Workspace, WorkspaceMode } from '../../models/counter.model';
     MatFormFieldModule,
     MatInputModule,
     MatButtonToggleModule,
+    FooterComponent,
   ],
   templateUrl: './workspace-list.component.html',
   styleUrl: './workspace-list.component.scss'
@@ -47,6 +49,7 @@ export class WorkspaceListComponent {
   newWorkspaceTitle = '';
   newWorkspaceMode: WorkspaceMode = 'counter';
   showNewForm = false;
+  showExamplePicker = false;
 
   // ── Swipe-to-reveal state ──────────────────────────────
   swipedId: string | null = null;
@@ -124,6 +127,20 @@ export class WorkspaceListComponent {
 
   checkedCount(categories: Category[]): number {
     return categories.filter(c => c.checked).length;
+  }
+
+  async createExample(mode: WorkspaceMode): Promise<void> {
+    const user = await firstValueFrom(this.user$);
+    if (!user) return;
+    const examples: Record<WorkspaceMode, { title: string; names: string[] }> = {
+      counter: { title: 'Daglig räknare', names: ['Kaffe', 'Möten', 'Pauser', 'Samtal'] },
+      checkbox: { title: 'Att göra', names: ['Handla mat', 'Betala räkningar', 'Städa', 'Ring läkaren'] },
+    };
+    const { title, names } = examples[mode];
+    const id = await this.workspaceService.createWorkspace(title, user.uid, user.email!, mode);
+    const categories: Category[] = names.map(name => ({ id: crypto.randomUUID(), name, count: 0 }));
+    await this.workspaceService.updateCategories(id, categories);
+    this.router.navigate(['/workspace', id]);
   }
 
   signOut(): void {

@@ -3,18 +3,22 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { combineLatest } from 'rxjs';
-import { switchMap } from 'rxjs/operators';
+import { switchMap, take } from 'rxjs/operators';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatDividerModule } from '@angular/material/divider';
+import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { CdkDragDrop, DragDropModule, moveItemInArray } from '@angular/cdk/drag-drop';
 import { AuthService } from '../../services/auth.service';
 import { WorkspaceService } from '../../services/workspace.service';
 import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog.component';
+import { FooterComponent } from '../footer/footer.component';
 import { Category, Workspace } from '../../models/counter.model';
 
 @Component({
@@ -27,6 +31,10 @@ import { Category, Workspace } from '../../models/counter.model';
     MatFormFieldModule,
     MatInputModule,
     MatDividerModule,
+    MatCheckboxModule,
+    MatAutocompleteModule,
+    DragDropModule,
+    FooterComponent,
   ],
   templateUrl: './admin.component.html',
   styleUrl: './admin.component.scss'
@@ -49,6 +57,15 @@ export class AdminComponent implements OnInit {
   editingName = '';
   inviteEmail = '';
   inviting = false;
+  knownEmails: string[] = [];
+
+  get filteredEmails(): string[] {
+    const members = new Set(Object.values(this.workspace?.memberEmails ?? {}));
+    const available = this.knownEmails.filter(e => !members.has(e));
+    const lower = this.inviteEmail.toLowerCase().trim();
+    if (!lower) return available;
+    return available.filter(e => e.toLowerCase().includes(lower));
+  }
 
   private get workspaceId(): string {
     return this.route.snapshot.paramMap.get('id')!;
@@ -71,6 +88,14 @@ export class AdminComponent implements OnInit {
         if (!this.titleInput) this.titleInput = workspace.title;
         if (user && workspace.ownerId !== user.uid) {
           this.router.navigate(['/workspace', this.workspaceId]);
+        }
+        if (user && !this.knownEmails.length) {
+          this.workspaceService.getWorkspaces(user.uid).pipe(take(1))
+            .subscribe(workspaces => {
+              this.knownEmails = [...new Set(
+                workspaces.flatMap(ws => Object.values(ws.memberEmails))
+              )];
+            });
         }
       });
   }
@@ -177,6 +202,22 @@ export class AdminComponent implements OnInit {
         this.router.navigate(['/']);
       }
     });
+  }
+
+  dropCategory(event: CdkDragDrop<Category[]>): void {
+    if (!this.workspace || event.previousIndex === event.currentIndex) return;
+    const reordered = [...this.workspace.categories];
+    moveItemInArray(reordered, event.previousIndex, event.currentIndex);
+    this.workspaceService.updateCategories(this.workspaceId, reordered);
+  }
+
+  toggleSetting(key: 'enableComments' | 'enableHistory', value: boolean): void {
+    if (!this.workspace) return;
+    let enableComments = key === 'enableComments' ? value : (this.workspace.enableComments ?? false);
+    const enableHistory  = key === 'enableHistory'  ? value : (this.workspace.enableHistory  ?? false);
+    // Comments require history — turn off comments when history is disabled
+    if (!enableHistory) enableComments = false;
+    this.workspaceService.updateSettings(this.workspaceId, enableComments, enableHistory);
   }
 
   private showError(message: string): void {

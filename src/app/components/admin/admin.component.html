@@ -44,29 +44,33 @@
       <p class="no-items">Inga kategorier än. Lägg till nedan.</p>
     }
 
-    @for (category of workspace.categories; track category.id; let last = $last) {
-      <div class="list-item">
-        @if (editingId === category.id) {
-          <mat-form-field appearance="outline" class="edit-field">
-            <input matInput [(ngModel)]="editingName"
-                   (keydown.enter)="saveEdit()" (keydown.escape)="cancelEdit()"
-                   autocomplete="off" autofocus />
-          </mat-form-field>
-          <button mat-icon-button color="primary" (click)="saveEdit()"><mat-icon>check</mat-icon></button>
-          <button mat-icon-button (click)="cancelEdit()"><mat-icon>close</mat-icon></button>
-        } @else {
-          <div class="item-info">
-            <span class="item-name">{{ category.name }}</span>
-            @if ((workspace.mode ?? 'counter') === 'counter') {
-              <span class="count-badge">{{ category.count }}</span>
-            }
-          </div>
-          <button mat-icon-button (click)="startEdit(category)"><mat-icon>edit</mat-icon></button>
-          <button mat-icon-button color="warn" (click)="confirmDeleteCategory(category)"><mat-icon>delete</mat-icon></button>
-        }
-      </div>
-      @if (!last) { <mat-divider /> }
-    }
+    <div cdkDropList (cdkDropListDropped)="dropCategory($event)" class="drag-list">
+      @for (category of workspace.categories; track category.id) {
+        <div class="list-item" cdkDrag>
+          @if (editingId === category.id) {
+            <div class="drag-handle-placeholder"></div>
+            <mat-form-field appearance="outline" class="edit-field">
+              <input matInput [(ngModel)]="editingName"
+                     (keydown.enter)="saveEdit()" (keydown.escape)="cancelEdit()"
+                     autocomplete="off" autofocus />
+            </mat-form-field>
+            <button mat-icon-button color="primary" (click)="saveEdit()"><mat-icon>check</mat-icon></button>
+            <button mat-icon-button (click)="cancelEdit()"><mat-icon>close</mat-icon></button>
+          } @else {
+            <mat-icon class="drag-handle" cdkDragHandle>drag_indicator</mat-icon>
+            <div class="item-info">
+              <span class="item-name">{{ category.name }}</span>
+              @if ((workspace.mode ?? 'counter') === 'counter') {
+                <span class="count-badge">{{ category.count }}</span>
+              }
+            </div>
+            <button mat-icon-button (click)="startEdit(category)"><mat-icon>edit</mat-icon></button>
+            <button mat-icon-button color="warn" (click)="confirmDeleteCategory(category)"><mat-icon>delete</mat-icon></button>
+          }
+          <mat-divider class="item-divider" />
+        </div>
+      }
+    </div>
 
     <div class="add-row">
       <mat-form-field appearance="outline" class="add-field">
@@ -79,6 +83,34 @@
               (click)="addCategory()" [disabled]="!newCategoryName.trim()">
         <mat-icon>add</mat-icon> Lägg till
       </button>
+    </div>
+
+    @if (workspace.categories.length > 0) {
+      <button mat-flat-button color="primary" class="done-btn" (click)="goBack()">
+        <mat-icon>check</mat-icon>
+        Klar
+      </button>
+    }
+  </section>
+
+  <mat-divider />
+
+  <!-- ─── Funktioner ───────────────────────────── -->
+  <section class="section">
+    <h2 class="section-title">Funktioner</h2>
+    <p class="hint">Historik sparas alltid, oavsett inställning.</p>
+    <div class="feature-list">
+      <mat-checkbox
+        [checked]="workspace.enableHistory ?? false"
+        (change)="toggleSetting('enableHistory', $event.checked)">
+        Historik – visa ändringslogg i arbetsytan
+      </mat-checkbox>
+      <mat-checkbox
+        [checked]="workspace.enableComments ?? false"
+        [disabled]="!(workspace.enableHistory ?? false)"
+        (change)="toggleSetting('enableComments', $event.checked)">
+        Kommentarer – fråga om kommentar vid varje ändring
+      </mat-checkbox>
     </div>
   </section>
 
@@ -111,8 +143,14 @@
         <mat-form-field appearance="outline" class="add-field">
           <mat-label>Bjud in via e-post</mat-label>
           <input matInput [(ngModel)]="inviteEmail"
+                 [matAutocomplete]="emailAuto"
                  (keydown.enter)="inviteMember()"
                  type="email" placeholder="namn@exempel.se" autocomplete="off" />
+          <mat-autocomplete #emailAuto="matAutocomplete">
+            @for (email of filteredEmails; track email) {
+              <mat-option [value]="email">{{ email }}</mat-option>
+            }
+          </mat-autocomplete>
         </mat-form-field>
         <button mat-flat-button color="primary" class="add-btn"
                 (click)="inviteMember()"
@@ -136,5 +174,6 @@
     </section>
   }
 
+  <app-footer />
 </div>
 }

@@ -2,12 +2,12 @@ import { Injectable, inject } from '@angular/core';
 import {
   Firestore, collection, doc, addDoc, updateDoc, deleteDoc,
   docData, collectionData, query, where, getDocs,
-  runTransaction, arrayUnion, serverTimestamp
+  runTransaction, arrayUnion, serverTimestamp, orderBy
 } from '@angular/fire/firestore';
 import { Observable } from 'rxjs';
 import emailjs from '@emailjs/browser';
 import { environment } from '../../environments/environment';
-import { Category, Workspace, WorkspaceMode } from '../models/counter.model';
+import { Category, ChangeEvent, Workspace, WorkspaceMode } from '../models/counter.model';
 
 @Injectable({ providedIn: 'root' })
 export class WorkspaceService {
@@ -156,7 +156,26 @@ export class WorkspaceService {
     await updateDoc(doc(this.firestore, 'workspaces', workspaceId), { members, memberEmails });
   }
 
+  async updateSettings(workspaceId: string, enableComments: boolean, enableHistory: boolean): Promise<void> {
+    await updateDoc(doc(this.firestore, 'workspaces', workspaceId), { enableComments, enableHistory });
+  }
+
   async deleteWorkspace(workspaceId: string): Promise<void> {
     await deleteDoc(doc(this.firestore, 'workspaces', workspaceId));
+  }
+
+  getChanges(workspaceId: string): Observable<ChangeEvent[]> {
+    const q = query(
+      collection(this.firestore, 'workspaces', workspaceId, 'changes'),
+      orderBy('timestamp', 'desc')
+    );
+    return collectionData(q, { idField: 'id' }) as Observable<ChangeEvent[]>;
+  }
+
+  async logChange(workspaceId: string, event: Omit<ChangeEvent, 'id' | 'timestamp'>): Promise<void> {
+    await addDoc(
+      collection(this.firestore, 'workspaces', workspaceId, 'changes'),
+      { ...event, timestamp: serverTimestamp() }
+    );
   }
 }

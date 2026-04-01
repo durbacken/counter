@@ -12,6 +12,7 @@
     }
   </mat-toolbar>
 
+  <div class="page-wrapper">
   <div class="container">
 
     @if (workspace.categories.length > 0) {
@@ -26,14 +27,14 @@
                 <button mat-mini-fab
                         class="btn-decrement"
                         [disabled]="category.count === 0"
-                        (click)="decrement(category.id)"
+                        (click)="decrement(category)"
                         aria-label="Minska">
                   <mat-icon>remove</mat-icon>
                 </button>
                 <span class="count">{{ category.count }}</span>
                 <button mat-mini-fab
                         color="primary"
-                        (click)="increment(category.id)"
+                        (click)="increment(category)"
                         aria-label="Öka">
                   <mat-icon>add</mat-icon>
                 </button>
@@ -51,7 +52,7 @@
             <div class="category-row checkbox-row">
               <mat-checkbox
                 [checked]="category.checked ?? false"
-                (change)="toggleCheck(category.id)"
+                (change)="toggleCheck(category)"
                 class="category-checkbox">
                 {{ category.name }}
               </mat-checkbox>
@@ -61,22 +62,58 @@
         </div>
       }
 
-      <mat-card class="chart-card">
-        <mat-card-content>
-          <app-chart [data]="workspace" />
-        </mat-card-content>
-      </mat-card>
+      @if ((workspace.mode ?? 'counter') === 'counter') {
+        <mat-card class="chart-card">
+          <mat-card-content>
+            <app-chart [data]="workspace" />
+          </mat-card-content>
+        </mat-card>
+      } @else {
+        <div class="progress-summary">
+          <div class="progress-label">
+            <span>{{ checkedCount(workspace.categories) }} av {{ workspace.categories.length }} klara</span>
+            <span class="progress-pct">{{ progressPct(workspace.categories) }}%</span>
+          </div>
+          <mat-progress-bar
+            mode="determinate"
+            [value]="progressPct(workspace.categories)" />
+        </div>
+      }
 
       <div class="actions">
         <button mat-stroked-button color="warn" (click)="confirmReset()">
           <mat-icon>restart_alt</mat-icon>
           Nollställ
         </button>
-        <button mat-flat-button color="primary" (click)="exportShare()">
-          <mat-icon>share</mat-icon>
-          Dela / Exportera
-        </button>
+        @if (workspace.enableHistory) {
+          <button mat-flat-button color="primary" [matMenuTriggerFor]="exportMenu">
+            <mat-icon>share</mat-icon>
+            Dela / Exportera
+          </button>
+          <mat-menu #exportMenu="matMenu">
+            <button mat-menu-item (click)="exportPng()">
+              <mat-icon>image</mat-icon>
+              Bild (PNG)
+            </button>
+            <button mat-menu-item (click)="exportXls()">
+              <mat-icon>table_chart</mat-icon>
+              Historik (XLS)
+            </button>
+          </mat-menu>
+        } @else {
+          <button mat-flat-button color="primary" (click)="exportPng()">
+            <mat-icon>share</mat-icon>
+            Dela / Exportera
+          </button>
+        }
       </div>
+
+      @if (workspace.enableHistory) {
+        <app-change-history
+          [categories]="workspace.categories"
+          [changes]="(changes$ | async) ?? []"
+          [showComments]="workspace.enableComments ?? false" />
+      }
 
     } @else {
       <div class="empty-state">
@@ -91,5 +128,7 @@
       </div>
     }
 
+  </div>
+  <app-footer />
   </div>
 }

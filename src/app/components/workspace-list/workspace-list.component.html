@@ -1,12 +1,14 @@
 @if (user$ | async; as user) {
   <mat-toolbar color="primary" class="toolbar">
-    <span class="toolbar-title">Läget</span>
+    <img src="icons/icon-192x192.png" class="toolbar-logo" alt="" />
+    <span class="toolbar-title">Koll på läget?</span>
     <span class="spacer"></span>
     <button mat-icon-button (click)="signOut()" aria-label="Logga ut">
       <mat-icon>logout</mat-icon>
     </button>
   </mat-toolbar>
 
+  <div class="page-wrapper">
   <div class="container">
     <p class="greeting">Hej, {{ user.displayName || user.email }}!</p>
 
@@ -19,6 +21,23 @@
             <mat-icon>add</mat-icon>
             Skapa din första
           </button>
+          <button mat-button class="example-toggle"
+                  (click)="showExamplePicker = !showExamplePicker">
+            Eller prova ett exempel
+            <mat-icon>{{ showExamplePicker ? 'expand_less' : 'expand_more' }}</mat-icon>
+          </button>
+          @if (showExamplePicker) {
+            <div class="example-choices">
+              <button mat-stroked-button (click)="createExample('counter')">
+                <mat-icon>tag</mat-icon>
+                Räknare
+              </button>
+              <button mat-stroked-button (click)="createExample('checkbox')">
+                <mat-icon>check_box</mat-icon>
+                Kryssrutor
+              </button>
+            </div>
+          }
         </div>
       } @else {
         <div class="workspace-list">
@@ -119,17 +138,17 @@
       </div>
     }
 
-    @if (!showNewForm) {
-      <button mat-fab extended color="primary" class="fab" (click)="showNewForm = true">
+  </div>
+
+  @if (!showNewForm && ((workspaces$ | async)?.length ?? 0) > 0) {
+    <div class="fab-row">
+      <button mat-flat-button color="primary" class="fab" (click)="showNewForm = true">
         <mat-icon>add</mat-icon>
         Ny arbetsyta
       </button>
-    }
+    </div>
+  }
 
-    <footer class="about">
-      Designad och utvecklad av Tobias &mdash;
-      synpunkter, förslag eller förbättringar?
-      <a href="mailto:tobias.sjobeck&#64;gmail.com">tobias.sjobeck&#64;gmail.com</a>
-    </footer>
+  <app-footer />
   </div>
 }
