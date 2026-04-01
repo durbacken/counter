@@ -2,6 +2,7 @@ import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { combineLatest } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatButtonModule } from '@angular/material/button';
@@ -58,17 +59,20 @@ export class AdminComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.auth.user$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(user => {
-      this.currentUserId = user?.uid ?? '';
-    });
+    const workspace$ = this.route.paramMap.pipe(
+      switchMap(params => this.workspaceService.getWorkspace(params.get('id')!))
+    );
 
-    this.route.paramMap.pipe(
-      switchMap(params => this.workspaceService.getWorkspace(params.get('id')!)),
-      takeUntilDestroyed(this.destroyRef)
-    ).subscribe(workspace => {
-      this.workspace = workspace;
-      if (!this.titleInput) this.titleInput = workspace.title;
-    });
+    combineLatest([this.auth.user$, workspace$])
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(([user, workspace]) => {
+        this.currentUserId = user?.uid ?? '';
+        this.workspace = workspace;
+        if (!this.titleInput) this.titleInput = workspace.title;
+        if (user && workspace.ownerId !== user.uid) {
+          this.router.navigate(['/workspace', this.workspaceId]);
+        }
+      });
   }
 
   goBack(): void {

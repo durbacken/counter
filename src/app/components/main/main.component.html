@@ -5,9 +5,11 @@
     </button>
     <span class="toolbar-title">{{ workspace.title }}</span>
     <span class="spacer"></span>
-    <button mat-icon-button (click)="goToAdmin()" aria-label="Inställningar">
-      <mat-icon>settings</mat-icon>
-    </button>
+    @if (isOwner$ | async) {
+      <button mat-icon-button (click)="goToAdmin()" aria-label="Inställningar">
+        <mat-icon>settings</mat-icon>
+      </button>
+    }
   </mat-toolbar>
 
   <div class="container">
@@ -80,10 +82,12 @@
       <div class="empty-state">
         <mat-icon class="empty-icon">bar_chart</mat-icon>
         <p>Inga kategorier ännu.</p>
-        <button mat-flat-button color="primary" (click)="goToAdmin()">
-          <mat-icon>add</mat-icon>
-          Lägg till kategorier
-        </button>
+        @if (isOwner$ | async) {
+          <button mat-flat-button color="primary" (click)="goToAdmin()">
+            <mat-icon>add</mat-icon>
+            Lägg till kategorier
+          </button>
+        }
       </div>
     }
 

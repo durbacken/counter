@@ -1,7 +1,8 @@
 import { Component, ViewChild, inject } from '@angular/core';
 import { AsyncPipe } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
-import { firstValueFrom, switchMap } from 'rxjs';
+import { combineLatest, firstValueFrom, switchMap } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -9,6 +10,7 @@ import { MatCardModule } from '@angular/material/card';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatDialog } from '@angular/material/dialog';
+import { AuthService } from '../../services/auth.service';
 import { WorkspaceService } from '../../services/workspace.service';
 import { ChartComponent } from '../chart/chart.component';
 import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog.component';
@@ -32,12 +34,17 @@ export class MainComponent {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly workspaceService = inject(WorkspaceService);
+  private readonly auth = inject(AuthService);
   private readonly dialog = inject(MatDialog);
 
   @ViewChild(ChartComponent) private chartComponent?: ChartComponent;
 
   readonly workspace$ = this.route.paramMap.pipe(
     switchMap(params => this.workspaceService.getWorkspace(params.get('id')!))
+  );
+
+  readonly isOwner$ = combineLatest([this.workspace$, this.auth.user$]).pipe(
+    map(([workspace, user]) => !!user && workspace?.ownerId === user.uid)
   );
 
   private get workspaceId(): string {
