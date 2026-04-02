@@ -1,0 +1,109 @@
+<mat-toolbar color="primary" class="toolbar">
+  <button mat-icon-button (click)="goBack()" aria-label="Tillbaka">
+    <mat-icon>arrow_back</mat-icon>
+  </button>
+  <span class="toolbar-title">Om appen</span>
+</mat-toolbar>
+
+<div class="page-wrapper">
+  <div class="container">
+
+    <div class="hero">
+      <img src="icons/icon-192x192.png" class="hero-logo" alt="" />
+      <h1>Koll på läget?</h1>
+      <p class="tagline">Räknare och checklistor i realtid — byggt för team.</p>
+    </div>
+
+    <mat-divider />
+
+    <section>
+      <h2>Vad är det?</h2>
+      <p>
+        <strong>Koll på läget?</strong> är en lättviktig webbapp för att hålla koll på saker
+        tillsammans i realtid. Oavsett om du räknar besökare på ett evenemang, bockar av punkter
+        på en checklista eller följer upp återkommande uppgifter — alla i teamet ser varje
+        uppdatering direkt när den händer.
+      </p>
+      <p>
+        Ingen app store. Ingen installation krävs. Fungerar på alla enheter med en webbläsare
+        och kan läggas till på hemskärmen för känslan av en vanlig app.
+      </p>
+    </section>
+
+    <mat-divider />
+
+    <section>
+      <h2>Vem är det för?</h2>
+      <ul>
+        <li><strong>Eventpersonal</strong> som räknar besökare, utrustning eller händelser</li>
+        <li><strong>Sportlag</strong> som noterar statistik under träning eller match</li>
+        <li><strong>Lager och butik</strong> som gör snabba inventeringar tillsammans</li>
+        <li><strong>Vård och säkerhet</strong> som kör skiftchecklistor eller tillsynsrundor</li>
+        <li><strong>Projektteam</strong> som följer upp dagliga punkter eller sprintuppgifter</li>
+        <li>Alla som någon gång tagit till ett delat kalkylblad bara för att hålla en löpande räkning</li>
+      </ul>
+    </section>
+
+    <mat-divider />
+
+    <section>
+      <h2>Funktioner</h2>
+
+      <div class="feature-grid">
+        <div class="feature-card">
+          <div class="feature-header">
+            <mat-icon>tag</mat-icon>
+            <h3>Räknare</h3>
+          </div>
+          <p>Öka och minska namngivna kategorier. Se live-summor och exportera som PNG eller Excel.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-header">
+            <mat-icon>check_box</mat-icon>
+            <h3>Kryssrutor</h3>
+          </div>
+          <p>Bocka av punkter i en lista. Följ framsteg i procent och exportera avklarad lista.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-header">
+            <mat-icon>group</mat-icon>
+            <h3>Samarbete</h3>
+          </div>
+          <p>Bjud in kollegor via e-post. Alla ser varje förändring direkt — ingen uppdatering krävs.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-header">
+            <mat-icon>history</mat-icon>
+            <h3>Historik</h3>
+          </div>
+          <p>Varje knapptryckning loggas med tidsstämpel och vem som gjorde ändringen. Exportera till Excel.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-header">
+            <mat-icon>link</mat-icon>
+            <h3>Publik delning</h3>
+          </div>
+          <p>Dela en arbetsyta som en publik länk — synlig utan inloggning för alla med länken.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-header">
+            <mat-icon>install_mobile</mat-icon>
+            <h3>Installerbar</h3>
+          </div>
+          <p>Lägg till på hemskärmen på iOS och Android. Ingen app store, laddas snabbt vid återbesök.</p>
+        </div>
+      </div>
+    </section>
+
+    <mat-divider />
+
+    <section class="closing">
+      <p>
+        Ingen reklam. Ingen spårning. Gratis att använda.
+      </p>
+      <p class="byline">Utvecklad av <strong>Tobias Sjöbeck</strong> / Durbacken Design</p>
+    </section>
+
+  </div>
+  <app-footer />
+</div>

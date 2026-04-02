@@ -34,7 +34,8 @@ service cloud.firestore {
     // ── Workspaces ──────────────────────────────────────────────────
     match /workspaces/{workspaceId} {
       // Members can see a workspace; anyone can read if the owner made it public.
-      allow read: if (isAuth() && isMember(workspaceId)) ||
+      // Use resource.data directly (not get()) so list queries pass rule validation.
+      allow read: if (isAuth() && uid() in resource.data.members) ||
                      resource.data.isPublic == true;
 
       // Any signed-in user can create a workspace they own.

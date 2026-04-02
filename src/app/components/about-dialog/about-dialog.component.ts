@@ -1,4 +1,5 @@
 import { Component, inject } from '@angular/core';
+import { Router } from '@angular/router';
 import { MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 
@@ -31,6 +32,7 @@ import { MatButtonModule } from '@angular/material/button';
       </p>
     </mat-dialog-content>
     <mat-dialog-actions align="end">
+      <button mat-button (click)="seeMore()">Se mer</button>
       <button mat-flat-button color="primary" (click)="close()">Tack, det gör jag!</button>
     </mat-dialog-actions>
   `,
@@ -90,6 +92,8 @@ import { MatButtonModule } from '@angular/material/button';
 })
 export class AboutDialogComponent {
   readonly ref = inject(MatDialogRef<AboutDialogComponent>);
+  readonly router = inject(Router);
   readonly year = new Date().getFullYear();
   close(): void { this.ref.close(); }
+  seeMore(): void { this.ref.close(); this.router.navigate(['/about']); }
 }

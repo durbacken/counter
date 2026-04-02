@@ -1,8 +1,8 @@
 import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { AsyncPipe } from '@angular/common';
 import { Router } from '@angular/router';
-import { firstValueFrom } from 'rxjs';
-import { filter, switchMap } from 'rxjs/operators';
+import { firstValueFrom, of } from 'rxjs';
+import { catchError, filter, switchMap } from 'rxjs/operators';
 import { FormsModule } from '@angular/forms';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatButtonModule } from '@angular/material/button';
@@ -14,6 +14,7 @@ import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatDialog } from '@angular/material/dialog';
 import { AuthService } from '../../services/auth.service';
 import { WorkspaceService } from '../../services/workspace.service';
+import { AboutDialogComponent } from '../about-dialog/about-dialog.component';
 import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog.component';
 import { FooterComponent } from '../footer/footer.component';
 import { Category, Workspace, WorkspaceMode } from '../../models/counter.model';
@@ -44,10 +45,13 @@ export class WorkspaceListComponent implements OnInit, OnDestroy {
   readonly user$ = this.auth.user$;
   readonly workspaces$ = this.auth.user$.pipe(
     filter(user => !!user),
-    switchMap(user => this.workspaceService.getWorkspaces(user!.uid))
+    switchMap(user => this.workspaceService.getWorkspaces(user!.uid).pipe(
+      catchError(() => of([]))
+    ))
   );
 
   installPrompt: any = null;
+  showIosHint = false;
   private readonly onBeforeInstall = (e: Event) => {
     e.preventDefault();
     this.installPrompt = e;
@@ -62,10 +66,22 @@ export class WorkspaceListComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     window.addEventListener('beforeinstallprompt', this.onBeforeInstall);
     window.addEventListener('appinstalled', () => { this.installPrompt = null; });
+
+    const isIos = /iphone|ipad|ipod/i.test(navigator.userAgent);
+    const isStandalone = ('standalone' in navigator) && (navigator as any).standalone;
+    const dismissed = localStorage.getItem('iosHintDismissed');
+    if (isIos && !isStandalone && !dismissed) {
+      this.showIosHint = true;
+    }
   }
 
   ngOnDestroy(): void {
     window.removeEventListener('beforeinstallprompt', this.onBeforeInstall);
+  }
+
+  dismissIosHint(): void {
+    this.showIosHint = false;
+    localStorage.setItem('iosHintDismissed', '1');
   }
 
   async promptInstall(): Promise<void> {
@@ -188,6 +204,10 @@ export class WorkspaceListComponent implements OnInit, OnDestroy {
     const categories: Category[] = names.map(name => ({ id: crypto.randomUUID(), name, count: 0 }));
     await this.workspaceService.updateCategories(id, categories);
     this.router.navigate(['/workspace', id]);
+  }
+
+  openAbout(): void {
+    this.dialog.open(AboutDialogComponent, { maxWidth: '380px' });
   }
 
   signOut(): void {

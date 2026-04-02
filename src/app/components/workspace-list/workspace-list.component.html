@@ -1,7 +1,11 @@
 @if (user$ | async; as user) {
   <mat-toolbar color="primary" class="toolbar">
-    <img src="icons/icon-192x192.png" class="toolbar-logo" alt="" />
-    <span class="toolbar-title">Koll på läget?</span>
+    <button mat-button class="toolbar-brand" (click)="openAbout()" aria-label="Om appen">
+      <span class="toolbar-brand-inner">
+        <img src="icons/icon-192x192.png" class="toolbar-logo" alt="" />
+        <span class="toolbar-title">Koll på läget?</span>
+      </span>
+    </button>
     <span class="spacer"></span>
     <button mat-icon-button (click)="signOut()" aria-label="Logga ut">
       <mat-icon>logout</mat-icon>
@@ -194,6 +198,16 @@
       <button mat-flat-button color="primary" class="fab" (click)="showNewForm = true">
         <mat-icon>add</mat-icon>
         Ny arbetsyta
+      </button>
+    </div>
+  }
+
+  @if (showIosHint) {
+    <div class="install-banner ios-hint">
+      <mat-icon class="install-icon">ios_share</mat-icon>
+      <span>Tryck på <strong>Dela</strong> och välj <strong>Lägg till på hemskärmen</strong></span>
+      <button mat-icon-button (click)="dismissIosHint()" aria-label="Stäng">
+        <mat-icon>close</mat-icon>
       </button>
     </div>
   }

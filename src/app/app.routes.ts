@@ -30,5 +30,10 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./components/workspace-view/workspace-view.component').then(m => m.WorkspaceViewComponent)
   },
+  {
+    path: 'about',
+    loadComponent: () =>
+      import('./components/about-page/about-page.component').then(m => m.AboutPageComponent)
+  },
   { path: '**', redirectTo: '' }
 ];
