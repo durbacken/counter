@@ -92,7 +92,11 @@ export class LoginComponent implements OnInit {
       await this.auth.sendMagicLink(email);
       this.linkSent = true;
     } catch (e: any) {
-      this.error = `Kunde inte skicka länken. (${e?.code ?? e?.message ?? 'okänt fel'})`;
+      if (e?.code === 'auth/quota-exceeded') {
+        this.error = 'För många inloggningsförsök idag. Försök igen imorgon eller logga in med Google.';
+      } else {
+        this.error = 'Kunde inte skicka länken. Kontrollera e-postadressen och försök igen.';
+      }
     } finally {
       this.loading = false;
     }
