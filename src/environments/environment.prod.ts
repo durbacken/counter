@@ -13,5 +13,5 @@ export const environment = {
     templateId: 'template_cscc11g',
     publicKey: 'VzZDhS0ti7U6hjKqu'
   },
-  appUrl: 'https://durbacken-raknare.netlify.app'
+  appUrl: 'https://counter-durbacken.vercel.app'
 };
