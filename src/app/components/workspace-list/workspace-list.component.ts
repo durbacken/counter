@@ -1,8 +1,8 @@
-import { Component, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { AsyncPipe } from '@angular/common';
 import { Router } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
-import { switchMap } from 'rxjs/operators';
+import { filter, switchMap } from 'rxjs/operators';
 import { FormsModule } from '@angular/forms';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatButtonModule } from '@angular/material/button';
@@ -35,7 +35,7 @@ import { Category, Workspace, WorkspaceMode } from '../../models/counter.model';
   templateUrl: './workspace-list.component.html',
   styleUrl: './workspace-list.component.scss'
 })
-export class WorkspaceListComponent {
+export class WorkspaceListComponent implements OnInit, OnDestroy {
   private readonly auth = inject(AuthService);
   private readonly workspaceService = inject(WorkspaceService);
   private readonly router = inject(Router);
@@ -43,14 +43,37 @@ export class WorkspaceListComponent {
 
   readonly user$ = this.auth.user$;
   readonly workspaces$ = this.auth.user$.pipe(
+    filter(user => !!user),
     switchMap(user => this.workspaceService.getWorkspaces(user!.uid))
   );
+
+  installPrompt: any = null;
+  private readonly onBeforeInstall = (e: Event) => {
+    e.preventDefault();
+    this.installPrompt = e;
+  };
 
   newWorkspaceTitle = '';
   newWorkspaceMode: WorkspaceMode = 'counter';
   showNewForm = false;
   showExamplePicker = false;
   showArchived = false;
+
+  ngOnInit(): void {
+    window.addEventListener('beforeinstallprompt', this.onBeforeInstall);
+    window.addEventListener('appinstalled', () => { this.installPrompt = null; });
+  }
+
+  ngOnDestroy(): void {
+    window.removeEventListener('beforeinstallprompt', this.onBeforeInstall);
+  }
+
+  async promptInstall(): Promise<void> {
+    if (!this.installPrompt) return;
+    this.installPrompt.prompt();
+    await this.installPrompt.userChoice;
+    this.installPrompt = null;
+  }
 
   // ── Swipe-to-reveal state ──────────────────────────────
   swipedId: string | null = null;

@@ -12,6 +12,17 @@
   <div class="container">
     <p class="greeting">Hej, {{ user.displayName || user.email }}!</p>
 
+    @if (installPrompt) {
+      <div class="install-banner">
+        <mat-icon class="install-icon">install_mobile</mat-icon>
+        <span>Lägg till på hemskärmen för snabb åtkomst</span>
+        <button mat-flat-button color="primary" (click)="promptInstall()">Installera</button>
+        <button mat-icon-button (click)="installPrompt = null" aria-label="Stäng">
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+    }
+
     @if (workspaces$ | async; as workspaces) {
       @if (activeWorkspaces(workspaces).length === 0 && !showNewForm) {
         <div class="empty-state">

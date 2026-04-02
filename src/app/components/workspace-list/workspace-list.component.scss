@@ -33,6 +33,24 @@
   margin: 0 0 16px;
 }
 
+/* ─── Install banner ─────────────────────────────────── */
+.install-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--surface);
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+  padding: 10px 12px;
+  margin-bottom: 16px;
+  font-size: 14px;
+  color: var(--text-primary);
+
+  .install-icon { color: #1976d2; flex-shrink: 0; }
+  span { flex: 1; }
+  button { flex-shrink: 0; }
+}
+
 /* ─── Workspace list ─────────────────────────────────── */
 .workspace-list {
   display: flex;
