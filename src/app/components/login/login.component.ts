@@ -91,8 +91,8 @@ export class LoginComponent implements OnInit {
     try {
       await this.auth.sendMagicLink(email);
       this.linkSent = true;
-    } catch {
-      this.error = 'Kunde inte skicka länken. Kontrollera e-postadressen och försök igen.';
+    } catch (e: any) {
+      this.error = `Kunde inte skicka länken. (${e?.code ?? e?.message ?? 'okänt fel'})`;
     } finally {
       this.loading = false;
     }
