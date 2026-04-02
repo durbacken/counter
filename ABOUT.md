@@ -53,7 +53,7 @@ Klar med en arbetsyta? Arkivera den istället för att radera. Arkiverade arbets
 ## Teknik
 
 - Byggd med **Angular 19** och **Firebase** (Firestore + Auth)
-- Driftsatt på **Netlify** med automatisk HTTPS
+- Driftsatt på **Vercel** med automatisk HTTPS
 - Lösenordsfri inloggning via e-postlänk eller Google
 - Firestore-säkerhetsregler styr åtkomst per arbetsyta
 - Ingen reklam, ingen spårning, ingen tredjepartsanalys

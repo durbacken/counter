@@ -40,7 +40,7 @@ The app UI is in Swedish.
 | What | Why |
 |------|-----|
 | **GitHub** (`durbacken/counter`) | Source control |
-| **Netlify** | Automatic deployment on every push to `main` |
+| **Vercel** | Automatic deployment on every push to `main` |
 
 ---
 
@@ -119,15 +119,15 @@ Output goes to `dist/counter/browser/`.
 
 ## Deployment
 
-Netlify builds and deploys automatically on every push to `main`.
+Vercel builds and deploys automatically on every push to `main`. Live at **https://counter-durbacken.vercel.app**.
 
 | Setting | Value |
 |---------|-------|
-| Build command | `npm install --include=dev && npm run build` |
-| Publish directory | `dist/counter/browser` |
-| Node version | 20 |
+| Build command | `npm run build` |
+| Output directory | `dist/counter/browser` |
+| Config | `vercel.json` |
 
-The `package-lock.json` and `.npmrc` are **not committed** — they contain corporate Nexus registry URLs that would cause Netlify's npm to time out.
+The `package-lock.json` and `.npmrc` are **not committed** — they contain corporate Nexus registry URLs.
 
 ---
 
@@ -136,7 +136,7 @@ The `package-lock.json` and `.npmrc` are **not committed** — they contain corp
 ### Authentication
 
 - Provider: Google Sign-in
-- Authorized domains must include the Netlify URL — set in Firebase Console → Authentication → Settings → Authorized domains
+- Authorized domains must include the Vercel URL (`counter-durbacken.vercel.app`) — set in Firebase Console → Authentication → Settings → Authorized domains
 
 ### Firestore security rules
 
@@ -177,4 +177,4 @@ Icons are already committed. To regenerate them after editing `scripts/icon.svg`
 npm run icons
 ```
 
-This uses `@resvg/resvg-js` to produce all PNG sizes and `favicon.ico`. This dependency is not installed on Netlify (icons are pre-committed), so it only needs to be run locally when the icon changes.
+This uses `@resvg/resvg-js` to produce all PNG sizes and `favicon.ico`. Icons are pre-committed so this only needs to be run locally when the icon changes.

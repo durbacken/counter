@@ -134,6 +134,19 @@
 
 .link-sent .hint { margin-bottom: 8px; text-align: center; }
 
+.paste-section {
+  border-top: 1px solid var(--divider);
+  margin: 16px 0 8px;
+  padding-top: 16px;
+}
+
+.paste-label {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin: 0 0 12px;
+  text-align: left !important;
+}
+
 .google-btn {
   width: 100%;
   height: 48px;

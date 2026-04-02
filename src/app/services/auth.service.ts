@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { Router } from '@angular/router';
-import { Auth, GoogleAuthProvider, User, authState, isSignInWithEmailLink, sendSignInLinkToEmail, signInWithEmailLink, signInWithPopup, signOut } from '@angular/fire/auth';
+import { Auth, GoogleAuthProvider, User, authState, getRedirectResult, isSignInWithEmailLink, sendSignInLinkToEmail, signInWithEmailLink, signInWithPopup, signInWithRedirect, signOut } from '@angular/fire/auth';
 import { environment } from '../../environments/environment';
 import {
   Firestore, collection, doc, getDocs, query,
@@ -16,10 +16,31 @@ export class AuthService {
   readonly user$ = authState(this.auth);
 
   async signInWithGoogle(): Promise<void> {
-    const result = await signInWithPopup(this.auth, new GoogleAuthProvider());
-    await this.onSignIn(result.user);
-    // Navigation is handled by the login component watching user$ so that
-    // the auth guard always sees an authenticated user when the route loads.
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches ||
+                         (('standalone' in navigator) && (navigator as any).standalone);
+    if (isStandalone) {
+      // In PWA/standalone mode use redirect so auth completes within the same
+      // WebKit context. Mark the pending redirect so the login page can show
+      // a spinner when we return.
+      sessionStorage.setItem('googleRedirectPending', '1');
+      await signInWithRedirect(this.auth, new GoogleAuthProvider());
+      // Page navigates away — no further code runs here.
+    } else {
+      const result = await signInWithPopup(this.auth, new GoogleAuthProvider());
+      await this.onSignIn(result.user);
+    }
+  }
+
+  async checkRedirectResult(): Promise<void> {
+    const result = await getRedirectResult(this.auth);
+    sessionStorage.removeItem('googleRedirectPending');
+    if (result?.user) {
+      await this.onSignIn(result.user);
+    }
+  }
+
+  get googleRedirectPending(): boolean {
+    return sessionStorage.getItem('googleRedirectPending') === '1';
   }
 
   async sendMagicLink(email: string): Promise<void> {
@@ -30,8 +51,8 @@ export class AuthService {
     localStorage.setItem('emailForSignIn', email);
   }
 
-  async completeEmailLink(email: string): Promise<void> {
-    const result = await signInWithEmailLink(this.auth, email, window.location.href);
+  async completeEmailLink(email: string, url = window.location.href): Promise<void> {
+    const result = await signInWithEmailLink(this.auth, email, url);
     localStorage.removeItem('emailForSignIn');
     await this.onSignIn(result.user);
   }

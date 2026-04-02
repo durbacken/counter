@@ -29,6 +29,7 @@ export class LoginComponent implements OnInit {
   linkSent = false;
   needsEmailConfirm = false;   // opened link on different device
   completingLink = false;
+  pastedLink = '';
 
   ngOnInit(): void {
     this.auth.user$.pipe(
@@ -48,6 +49,13 @@ export class LoginComponent implements OnInit {
       } else {
         this.needsEmailConfirm = true;
       }
+    } else if (this.auth.googleRedirectPending) {
+      // Returning from Google redirect (iOS PWA flow)
+      this.completingLink = true;
+      this.auth.checkRedirectResult().catch(() => {
+        this.error = 'Inloggningen misslyckades. Försök igen.';
+        this.completingLink = false;
+      });
     }
   }
 
@@ -59,6 +67,19 @@ export class LoginComponent implements OnInit {
     } catch {
       this.error = 'Inloggningen misslyckades. Försök igen.';
       this.loading = false;
+    }
+  }
+
+  async signInWithPastedLink(): Promise<void> {
+    const url = this.pastedLink.trim();
+    if (!url || !this.emailInput) return;
+    this.completingLink = true;
+    this.error = '';
+    try {
+      await this.auth.completeEmailLink(this.emailInput, url);
+    } catch {
+      this.error = 'Länken är ogiltig eller har gått ut. Försök igen.';
+      this.completingLink = false;
     }
   }
 

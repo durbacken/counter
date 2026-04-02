@@ -63,7 +63,21 @@
     @else if (linkSent) {
       <div class="link-sent">
         <p class="hint">En inloggningslänk har skickats till <strong>{{ emailInput }}</strong>. Klicka på länken i e-postmeddelandet för att logga in.</p>
-        <button mat-button (click)="linkSent = false">Skicka igen</button>
+
+        <div class="paste-section">
+          <p class="paste-label">Öppnas länken i fel app? Kopiera länken från mailet och klistra in den här:</p>
+          <mat-form-field appearance="outline" class="email-field">
+            <mat-label>Klistra in länk</mat-label>
+            <input matInput [(ngModel)]="pastedLink" autocomplete="off" />
+          </mat-form-field>
+          <button mat-flat-button color="primary" class="action-btn"
+                  [disabled]="!pastedLink.trim() || completingLink"
+                  (click)="signInWithPastedLink()">
+            Logga in
+          </button>
+        </div>
+
+        <button mat-button (click)="linkSent = false; pastedLink = ''">Skicka igen</button>
       </div>
     }
 
