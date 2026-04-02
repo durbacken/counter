@@ -21,15 +21,15 @@
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: #757575;
+  color: var(--text-secondary);
   margin: 0 0 12px;
 }
 
 .full-width { width: 100%; }
 
-.no-items { color: #9e9e9e; font-style: italic; margin: 0 0 12px; }
+.no-items { color: var(--text-secondary); font-style: italic; margin: 0 0 12px; }
 
-/* ─── List items (categories + members) ──────────── */
+/* ─── List items ──────────────────────────────────────── */
 .list-item {
   position: relative;
   display: flex;
@@ -46,15 +46,9 @@
     min-width: 0;
   }
 
-  .item-name {
-    font-size: 15px;
-    word-break: break-word;
-  }
+  .item-name { font-size: 15px; word-break: break-word; }
 
-  .edit-field {
-    flex: 1;
-    margin-bottom: -1.25em;
-  }
+  .edit-field { flex: 1; margin-bottom: -1.25em; }
 }
 
 .count-badge {
@@ -78,43 +72,24 @@
   flex-shrink: 0;
 }
 
-/* ─── Drag-and-drop ───────────────────────────────── */
-.drag-list { display: flex; flex-direction: column; }
-
-.drag-handle {
-  font-size: 20px;
-  width: 20px;
-  height: 20px;
-  color: #bdbdbd;
-  cursor: grab;
+.admin-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #2e7d32;
+  background: #e8f5e9;
+  padding: 2px 8px;
+  border-radius: 10px;
+  text-transform: uppercase;
   flex-shrink: 0;
-  touch-action: none;
 }
 
-.drag-handle-placeholder { width: 20px; flex-shrink: 0; }
-
-.item-divider { position: absolute; bottom: 0; left: 0; right: 0; }
-
-.cdk-drag-preview {
-  background: white;
-  border-radius: 4px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-  display: flex;
-  align-items: center;
-  padding: 4px 0;
-  gap: 4px;
-  min-height: 56px;
+@media (prefers-color-scheme: dark) {
+  .count-badge  { background: #1a3a6b; color: #90caf9; }
+  .owner-label  { background: #1a3a6b; color: #90caf9; }
+  .admin-label  { background: #1a4a1a; color: #a5d6a7; }
 }
 
-.cdk-drag-placeholder { opacity: 0.3; }
-
-.cdk-drag-animating { transition: transform 200ms ease; }
-
-.drag-list.cdk-drop-list-dragging .list-item:not(.cdk-drag-placeholder) {
-  transition: transform 200ms ease;
-}
-
-/* ─── Add row ─────────────────────────────────────── */
+/* ─── Add row ─────────────────────────────────────────── */
 .add-row {
   display: flex;
   align-items: flex-start;
@@ -125,42 +100,79 @@
   .add-btn { height: 56px; flex-shrink: 0; }
 }
 
-.done-btn {
-  width: 100%;
-  height: 48px;
-  margin-top: 16px;
-}
+.done-btn { width: 100%; height: 48px; margin-top: 16px; }
 
-.feature-list {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  margin-top: 8px;
-}
+.feature-list { display: flex; flex-direction: column; gap: 12px; margin-top: 8px; }
 
-.hint {
-  font-size: 12px;
-  color: #9e9e9e;
-  margin: 4px 0 0;
-}
+.hint { font-size: 12px; color: var(--text-secondary); margin: 4px 0 0; }
 
-/* ─── Mode display ────────────────────────────────── */
+/* ─── Mode display ────────────────────────────────────── */
 .mode-display {
   display: flex;
   align-items: center;
   gap: 6px;
   font-size: 15px;
-  color: #424242;
+  color: var(--text-primary);
 
   mat-icon { font-size: 20px; width: 20px; height: 20px; }
 }
 
-.mode-locked {
-  font-size: 12px;
-  color: #9e9e9e;
-  margin-left: 4px;
+.mode-locked { font-size: 12px; color: var(--text-secondary); margin-left: 4px; }
+
+/* ─── Drag-and-drop ───────────────────────────────────── */
+.drag-list { display: flex; flex-direction: column; }
+
+.drag-handle {
+  font-size: 20px; width: 20px; height: 20px;
+  color: var(--text-secondary);
+  cursor: grab;
+  flex-shrink: 0;
+  touch-action: none;
+  opacity: 0.5;
 }
 
-/* ─── Danger zone ─────────────────────────────────── */
+.drag-handle-placeholder { width: 20px; flex-shrink: 0; }
+
+.item-divider { position: absolute; bottom: 0; left: 0; right: 0; }
+
+.cdk-drag-preview {
+  background: var(--surface);
+  border-radius: 4px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+  display: flex;
+  align-items: center;
+  padding: 4px 0;
+  gap: 4px;
+  min-height: 56px;
+}
+
+.cdk-drag-placeholder { opacity: 0.3; }
+.cdk-drag-animating { transition: transform 200ms ease; }
+
+.drag-list.cdk-drop-list-dragging .list-item:not(.cdk-drag-placeholder) {
+  transition: transform 200ms ease;
+}
+
+/* ─── Share link ──────────────────────────────────────── */
+.share-link-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 12px;
+  background: var(--surface-variant);
+  border-radius: 8px;
+  padding: 8px 12px;
+}
+
+.share-url {
+  flex: 1;
+  font-size: 13px;
+  color: var(--text-secondary);
+  word-break: break-all;
+  min-width: 0;
+}
+
+/* ─── Danger zone ─────────────────────────────────────── */
 .danger-section { padding-top: 16px; }
 .danger-title { color: #c62828; }
+.danger-actions { display: flex; gap: 8px; flex-wrap: wrap; }

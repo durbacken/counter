@@ -57,6 +57,13 @@ export class MainComponent {
     map(([workspace, user]) => !!user && workspace?.ownerId === user.uid)
   );
 
+  readonly canAccessSettings$ = combineLatest([this.workspace$, this.auth.user$]).pipe(
+    map(([workspace, user]) => !!user && (
+      workspace?.ownerId === user.uid ||
+      (workspace?.admins ?? []).includes(user.uid)
+    ))
+  );
+
   readonly changes$ = this.route.paramMap.pipe(
     switchMap(params =>
       this.workspaceService.getChanges(params.get('id')!).pipe(startWith([] as ChangeEvent[]))
@@ -129,17 +136,21 @@ export class MainComponent {
       ) ?? null;
     }
 
-    await this.workspaceService.logChange(this.workspaceId, {
-      workspaceId: this.workspaceId,
-      categoryId: category.id,
-      categoryName: category.name,
-      changeType,
-      previousValue,
-      newValue,
-      userId: user.uid,
-      userEmail: user.email ?? '',
-      ...(comment ? { comment } : {}),
-    });
+    try {
+      await this.workspaceService.logChange(this.workspaceId, {
+        workspaceId: this.workspaceId,
+        categoryId: category.id,
+        categoryName: category.name,
+        changeType,
+        previousValue,
+        newValue,
+        userId: user.uid,
+        userEmail: user.email ?? '',
+        ...(comment ? { comment } : {}),
+      });
+    } catch (e) {
+      console.error('logChange failed:', e);
+    }
   }
 
   checkedCount(categories: Category[]): number {
@@ -202,14 +213,22 @@ export class MainComponent {
       const chartCanvas = this.chartComponent.getCanvas();
       const padding = 20;
       const footerH = 28;
+      const tempCtx = document.createElement('canvas').getContext('2d')!;
+      const notesH = workspace.notes
+        ? this.drawNotesText(tempCtx, workspace.notes, 0, 0, chartCanvas.width, false) + 16
+        : 0;
       sourceCanvas = document.createElement('canvas');
       sourceCanvas.width = chartCanvas.width + padding * 2;
-      sourceCanvas.height = chartCanvas.height + padding * 2 + footerH;
+      sourceCanvas.height = chartCanvas.height + padding * 2 + notesH + footerH;
       const ctx = sourceCanvas.getContext('2d')!;
       ctx.fillStyle = '#ffffff';
       ctx.fillRect(0, 0, sourceCanvas.width, sourceCanvas.height);
       ctx.drawImage(chartCanvas, padding, padding);
-      this.drawExportFooter(ctx, sourceCanvas.width, chartCanvas.height + padding + footerH - 6, logo);
+      if (workspace.notes) {
+        ctx.fillStyle = '#757575';
+        this.drawNotesText(ctx, workspace.notes, padding, chartCanvas.height + padding + 4, chartCanvas.width);
+      }
+      this.drawExportFooter(ctx, sourceCanvas.width, sourceCanvas.height - 8, logo);
     }
 
     const blob = await new Promise<Blob>((resolve, reject) =>
@@ -238,10 +257,16 @@ export class MainComponent {
     const BOX = 20;
     const TITLE_H = 76;
     const FOOTER_H = 40;
+    const maxTextW = W - PAD * 2;
+
+    const tempCtx = document.createElement('canvas').getContext('2d')!;
+    const notesH = workspace.notes
+      ? this.drawNotesText(tempCtx, workspace.notes, 0, 0, maxTextW, false) + 12
+      : 0;
 
     const canvas = document.createElement('canvas');
     canvas.width = W;
-    canvas.height = PAD + TITLE_H + workspace.categories.length * ROW + FOOTER_H + PAD;
+    canvas.height = PAD + TITLE_H + notesH + workspace.categories.length * ROW + FOOTER_H + PAD;
 
     const ctx = canvas.getContext('2d')!;
     ctx.fillStyle = '#ffffff';
@@ -275,6 +300,13 @@ export class MainComponent {
     }
 
     y += TITLE_H;
+
+    // Notes
+    if (workspace.notes) {
+      ctx.fillStyle = '#757575';
+      const drawnH = this.drawNotesText(ctx, workspace.notes, PAD, y, maxTextW);
+      y += drawnH + 12;
+    }
 
     // Category rows
     for (const cat of workspace.categories) {
@@ -328,6 +360,41 @@ export class MainComponent {
     this.drawExportFooter(ctx, W, y + PAD + 12, logo);
 
     return canvas;
+  }
+
+  /**
+   * Draws (or measures when draw=false) wrapped + newline-respecting notes text.
+   * Returns total pixel height used.
+   */
+  private drawNotesText(
+    ctx: CanvasRenderingContext2D,
+    notes: string,
+    x: number, y: number,
+    maxWidth: number,
+    draw = true
+  ): number {
+    const LINE_H = 17;
+    ctx.font = '13px system-ui, sans-serif';
+    let totalH = 0;
+    for (const para of notes.split('\n')) {
+      if (!para.trim()) { totalH += Math.round(LINE_H * 0.6); continue; }
+      let line = '';
+      for (const word of para.split(' ')) {
+        const test = line ? `${line} ${word}` : word;
+        if (ctx.measureText(test).width > maxWidth && line) {
+          if (draw) ctx.fillText(line, x, y + totalH + 13);
+          totalH += LINE_H;
+          line = word;
+        } else {
+          line = test;
+        }
+      }
+      if (line) {
+        if (draw) ctx.fillText(line, x, y + totalH + 13);
+        totalH += LINE_H;
+      }
+    }
+    return totalH;
   }
 
   private roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number): void {
@@ -404,8 +471,18 @@ export class MainComponent {
     });
 
     const { utils, writeFile } = await import('xlsx');
-    const sheet = utils.json_to_sheet(rows);
-    const wb    = utils.book_new();
+
+    // Build header rows: title + optional notes lines + blank separator
+    const headerAoa: string[][] = [[workspace.title]];
+    if (workspace.notes) {
+      workspace.notes.split('\n').forEach(line => headerAoa.push([line]));
+    }
+    headerAoa.push([]); // blank row before data
+
+    const sheet = utils.aoa_to_sheet(headerAoa);
+    utils.sheet_add_json(sheet, rows, { origin: { r: headerAoa.length, c: 0 } });
+
+    const wb = utils.book_new();
     utils.book_append_sheet(wb, sheet, 'Historik');
     writeFile(wb, `${workspace.title}-historik.xlsx`);
   }

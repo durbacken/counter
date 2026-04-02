@@ -2,20 +2,12 @@
   position: sticky;
   top: 0;
   z-index: 100;
-  // iOS PWA: push buttons below the translucent status bar.
-  // height: auto lets the toolbar grow instead of compressing content.
   padding-top: env(safe-area-inset-top);
   height: auto !important;
   min-height: 56px;
 
-  .toolbar-title {
-    font-size: 18px;
-    font-weight: 500;
-  }
-
-  .spacer {
-    flex: 1;
-  }
+  .toolbar-title { font-size: 18px; font-weight: 500; }
+  .spacer { flex: 1; }
 }
 
 .page-wrapper {
@@ -34,11 +26,20 @@
   box-sizing: border-box;
 }
 
+/* ─── Workspace notes ───────────────────────────────── */
+.workspace-notes {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin: 0 0 12px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+
 /* ─── Category list ─────────────────────────────────── */
 .category-list {
-  background: white;
+  background: var(--surface);
   border-radius: 12px;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
+  box-shadow: var(--shadow);
   overflow: hidden;
   margin-bottom: 16px;
 }
@@ -77,28 +78,25 @@
     min-height: 56px;
   }
 
-  .category-checkbox {
-    flex: 1;
-    font-size: 16px;
-  }
+  .category-checkbox { flex: 1; font-size: 16px; }
 
   .btn-decrement {
-    background-color: #eeeeee;
-    color: #555;
+    background-color: var(--surface-variant);
+    color: var(--text-secondary);
     box-shadow: none;
 
     &:disabled {
-      background-color: #f5f5f5;
-      color: #bdbdbd;
+      background-color: var(--surface-variant);
+      opacity: 0.4;
     }
   }
 }
 
 /* ─── Checkbox progress summary ─────────────────────── */
 .progress-summary {
-  background: white;
+  background: var(--surface);
   border-radius: 12px;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
+  box-shadow: var(--shadow);
   padding: 16px;
   margin-bottom: 16px;
 }
@@ -107,33 +105,21 @@
   display: flex;
   justify-content: space-between;
   font-size: 14px;
-  color: #424242;
+  color: var(--text-primary);
   margin-bottom: 10px;
 }
 
-.progress-pct {
-  font-weight: 600;
-  color: #1976d2;
-}
+.progress-pct { font-weight: 600; color: #1976d2; }
 
 /* ─── Chart card ─────────────────────────────────────── */
 .chart-card {
   margin-bottom: 16px;
-
-  mat-card-content {
-    padding-top: 8px;
-  }
+  mat-card-content { padding-top: 8px; }
 }
 
-/* ─── Action buttons ─────────────────────────────────── */
-.actions {
-  display: flex;
-  gap: 12px;
-
-  button {
-    flex: 1;
-    height: 48px;
-  }
+.chart-placeholder {
+  height: 200px;
+  margin-bottom: 16px;
 }
 
 /* ─── Empty state ────────────────────────────────────── */
@@ -142,7 +128,7 @@
   flex-direction: column;
   align-items: center;
   padding: 64px 16px;
-  color: #757575;
+  color: var(--text-secondary);
   text-align: center;
 
   .empty-icon {
@@ -153,8 +139,5 @@
     opacity: 0.35;
   }
 
-  p {
-    font-size: 16px;
-    margin-bottom: 24px;
-  }
+  p { font-size: 16px; margin-bottom: 24px; }
 }

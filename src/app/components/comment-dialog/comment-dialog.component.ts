@@ -7,7 +7,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { Observable } from 'rxjs';
-import { map, startWith } from 'rxjs/operators';
+import { map } from 'rxjs/operators';
 
 export interface CommentDialogData {
   categoryName: string;
@@ -49,7 +49,7 @@ export interface CommentDialogData {
     </mat-dialog-actions>
   `,
   styles: [`
-    .change-desc { color: #666; font-size: 14px; margin: 0 0 16px; }
+    .change-desc { color: var(--text-secondary); font-size: 14px; margin: 0 0 16px; }
     .full-width { width: 100%; }
     mat-dialog-content { min-width: 280px; }
   `]
@@ -63,10 +63,9 @@ export class CommentDialogComponent implements OnInit {
 
   ngOnInit(): void {
     this.filteredComments$ = this.commentControl.valueChanges.pipe(
-      startWith(''),
       map(value => {
-        const lower = (value ?? '').toLowerCase();
-        if (!lower) return this.data.previousComments;
+        const lower = (value ?? '').toLowerCase().trim();
+        if (!lower) return [];
         return this.data.previousComments.filter(c => c.toLowerCase().includes(lower));
       })
     );

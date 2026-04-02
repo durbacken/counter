@@ -17,10 +17,18 @@ export interface Workspace {
   /** Maps uid → email for display purposes. */
   memberEmails: { [uid: string]: string };
   categories: Category[];
+  /** UIDs of members promoted to admin (co-owner). Can manage settings but not delete workspace. */
+  admins?: string[];
   /** Show comment dialog after each change. History is always saved regardless. */
   enableComments?: boolean;
   /** Show the per-category history accordion. History is always saved regardless. */
   enableHistory?: boolean;
+  /** Optional description / notes visible on the workspace card and view page. */
+  notes?: string;
+  /** Soft-deleted by owner; hidden from main list but restorable. */
+  archived?: boolean;
+  /** Allow anyone with the link to view this workspace without signing in. */
+  isPublic?: boolean;
 }
 
 export interface UserProfile {

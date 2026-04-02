@@ -13,7 +13,7 @@
     <p class="greeting">Hej, {{ user.displayName || user.email }}!</p>
 
     @if (workspaces$ | async; as workspaces) {
-      @if (workspaces.length === 0 && !showNewForm) {
+      @if (activeWorkspaces(workspaces).length === 0 && !showNewForm) {
         <div class="empty-state">
           <mat-icon class="empty-icon">workspaces</mat-icon>
           <p>Inga arbetsytor ännu.</p>
@@ -41,7 +41,7 @@
         </div>
       } @else {
         <div class="workspace-list">
-          @for (ws of workspaces; track ws.id) {
+          @for (ws of activeWorkspaces(workspaces); track ws.id) {
             <div class="ws-swipe-wrapper"
                  (touchstart)="onTouchStart($event, ws.id)"
                  (touchend)="onTouchEnd($event, ws.id)">
@@ -50,8 +50,8 @@
               <div class="swipe-action"
                    (click)="confirmAction(ws, user.uid); $event.stopPropagation()">
                 @if (isOwner(ws, user.uid)) {
-                  <mat-icon>delete</mat-icon>
-                  <span>Ta bort</span>
+                  <mat-icon>archive</mat-icon>
+                  <span>Arkivera</span>
                 } @else {
                   <mat-icon>exit_to_app</mat-icon>
                   <span>Lämna</span>
@@ -87,12 +87,48 @@
                       {{ ws.members.length }} {{ ws.members.length === 1 ? 'person' : 'personer' }}
                     </span>
                   </div>
+                  @if (ws.notes) {
+                    <p class="ws-notes">{{ ws.notes }}</p>
+                  }
                 </mat-card-content>
               </mat-card>
 
             </div>
           }
         </div>
+      }
+
+      <!-- Archived workspaces -->
+      @if (archivedWorkspaces(workspaces).length > 0) {
+        <button mat-button class="archived-toggle"
+                (click)="showArchived = !showArchived">
+          <mat-icon>{{ showArchived ? 'expand_less' : 'expand_more' }}</mat-icon>
+          Arkiverade ({{ archivedWorkspaces(workspaces).length }})
+        </button>
+        @if (showArchived) {
+          <div class="workspace-list archived-list">
+            @for (ws of archivedWorkspaces(workspaces); track ws.id) {
+              <mat-card class="workspace-card archived-card">
+                <mat-card-content>
+                  <div class="ws-header">
+                    <span class="ws-title">{{ ws.title }}</span>
+                    <span class="archived-badge">Arkiverad</span>
+                  </div>
+                  <div class="archived-actions">
+                    <button mat-stroked-button (click)="restoreWorkspace(ws)">
+                      <mat-icon>unarchive</mat-icon>
+                      Återställ
+                    </button>
+                    <button mat-stroked-button color="warn" (click)="confirmPermanentDelete(ws)">
+                      <mat-icon>delete_forever</mat-icon>
+                      Radera
+                    </button>
+                  </div>
+                </mat-card-content>
+              </mat-card>
+            }
+          </div>
+        }
       }
     }
 
@@ -140,7 +176,7 @@
 
   </div>
 
-  @if (!showNewForm && ((workspaces$ | async)?.length ?? 0) > 0) {
+  @if (!showNewForm && activeWorkspaces((workspaces$ | async) ?? []).length > 0) {
     <div class="fab-row">
       <button mat-flat-button color="primary" class="fab" (click)="showNewForm = true">
         <mat-icon>add</mat-icon>

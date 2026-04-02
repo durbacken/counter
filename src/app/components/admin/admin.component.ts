@@ -12,9 +12,12 @@ import { MatInputModule } from '@angular/material/input';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { Clipboard } from '@angular/cdk/clipboard';
 import { CdkDragDrop, DragDropModule, moveItemInArray } from '@angular/cdk/drag-drop';
+import { ClipboardModule } from '@angular/cdk/clipboard';
 import { AuthService } from '../../services/auth.service';
 import { WorkspaceService } from '../../services/workspace.service';
 import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog.component';
@@ -33,7 +36,9 @@ import { Category, Workspace } from '../../models/counter.model';
     MatDividerModule,
     MatCheckboxModule,
     MatAutocompleteModule,
+    MatTooltipModule,
     DragDropModule,
+    ClipboardModule,
     FooterComponent,
   ],
   templateUrl: './admin.component.html',
@@ -46,18 +51,27 @@ export class AdminComponent implements OnInit {
   private readonly auth = inject(AuthService);
   private readonly dialog = inject(MatDialog);
   private readonly snackbar = inject(MatSnackBar);
+  private readonly clipboard = inject(Clipboard);
   private readonly destroyRef = inject(DestroyRef);
 
   workspace: Workspace | null = null;
   currentUserId = '';
+  private cachedWorkspaceId = '';
 
   titleInput = '';
+  notesInput = '';
+  private notesInitialized = false;
+  private notesTimer?: ReturnType<typeof setTimeout>;
   newCategoryName = '';
   editingId: string | null = null;
   editingName = '';
   inviteEmail = '';
   inviting = false;
   knownEmails: string[] = [];
+
+  get shareUrl(): string {
+    return `${window.location.origin}/view/${this.workspaceId}`;
+  }
 
   get filteredEmails(): string[] {
     const members = new Set(Object.values(this.workspace?.memberEmails ?? {}));
@@ -68,14 +82,30 @@ export class AdminComponent implements OnInit {
   }
 
   private get workspaceId(): string {
-    return this.route.snapshot.paramMap.get('id')!;
+    return this.cachedWorkspaceId;
   }
 
   get isOwner(): boolean {
     return this.workspace?.ownerId === this.currentUserId;
   }
 
+  get isAdmin(): boolean {
+    return this.workspace?.admins?.includes(this.currentUserId) ?? false;
+  }
+
+  get canAccessSettings(): boolean {
+    return this.isOwner || this.isAdmin;
+  }
+
   ngOnInit(): void {
+    this.cachedWorkspaceId = this.route.snapshot.paramMap.get('id')!;
+
+    // On destroy: cancel pending debounce and flush immediately
+    this.destroyRef.onDestroy(() => {
+      clearTimeout(this.notesTimer);
+      this.saveNotes();
+    });
+
     const workspace$ = this.route.paramMap.pipe(
       switchMap(params => this.workspaceService.getWorkspace(params.get('id')!))
     );
@@ -86,7 +116,13 @@ export class AdminComponent implements OnInit {
         this.currentUserId = user?.uid ?? '';
         this.workspace = workspace;
         if (!this.titleInput) this.titleInput = workspace.title;
-        if (user && workspace.ownerId !== user.uid) {
+        if (!this.notesInitialized) {
+          this.notesInput = workspace.notes ?? '';
+          this.notesInitialized = true;
+        }
+        const isPrivileged = workspace.ownerId === user?.uid ||
+          (workspace.admins ?? []).includes(user?.uid ?? '');
+        if (user && !isPrivileged) {
           this.router.navigate(['/workspace', this.workspaceId]);
         }
         if (user && !this.knownEmails.length) {
@@ -101,6 +137,7 @@ export class AdminComponent implements OnInit {
   }
 
   goBack(): void {
+    this.saveNotes();
     this.router.navigate(['/workspace', this.workspaceId]);
   }
 
@@ -111,6 +148,25 @@ export class AdminComponent implements OnInit {
     } else if (!title) {
       this.titleInput = this.workspace?.title ?? '';
     }
+  }
+
+  onNotesChange(): void {
+    clearTimeout(this.notesTimer);
+    this.notesTimer = setTimeout(() => this.saveNotes(), 800);
+  }
+
+  saveNotes(): void {
+    if (!this.cachedWorkspaceId) return;
+    this.workspaceService.updateNotes(this.cachedWorkspaceId, this.notesInput.trim());
+  }
+
+  togglePublic(isPublic: boolean): void {
+    this.workspaceService.setPublic(this.workspaceId, isPublic);
+  }
+
+  copyShareUrl(): void {
+    this.clipboard.copy(this.shareUrl);
+    this.snackbar.open('Länk kopierad!', 'Stäng', { duration: 2500 });
   }
 
   startEdit(category: Category): void {
@@ -193,9 +249,27 @@ export class AdminComponent implements OnInit {
     });
   }
 
+  confirmArchiveWorkspace(): void {
+    this.dialog.open(ConfirmDialogComponent, {
+      data: {
+        title: 'Arkivera arbetsyta',
+        message: `Vill du arkivera "${this.workspace?.title}"? Arbetsytan döljs men kan återställas.`
+      }
+    }).afterClosed().subscribe(async confirmed => {
+      if (confirmed) {
+        await this.workspaceService.archiveWorkspace(this.workspaceId);
+        this.router.navigate(['/']);
+      }
+    });
+  }
+
+  async unarchiveWorkspace(): Promise<void> {
+    await this.workspaceService.restoreWorkspace(this.workspaceId);
+  }
+
   confirmDeleteWorkspace(): void {
     this.dialog.open(ConfirmDialogComponent, {
-      data: { title: 'Ta bort arbetsyta', message: 'Är du säker? Denna åtgärd kan inte ångras.' }
+      data: { title: 'Radera permanent', message: 'Är du säker? Denna åtgärd kan inte ångras.' }
     }).afterClosed().subscribe(async confirmed => {
       if (confirmed) {
         await this.workspaceService.deleteWorkspace(this.workspaceId);
@@ -209,6 +283,12 @@ export class AdminComponent implements OnInit {
     const reordered = [...this.workspace.categories];
     moveItemInArray(reordered, event.previousIndex, event.currentIndex);
     this.workspaceService.updateCategories(this.workspaceId, reordered);
+  }
+
+  toggleAdmin(uid: string): void {
+    if (!this.workspace) return;
+    const isCurrentlyAdmin = this.workspace.admins?.includes(uid) ?? false;
+    this.workspaceService.setAdmin(this.workspaceId, uid, !isCurrentlyAdmin);
   }
 
   toggleSetting(key: 'enableComments' | 'enableHistory', value: boolean): void {

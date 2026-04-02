@@ -36,6 +36,20 @@
 
   <mat-divider />
 
+  <!-- ─── Beskrivning ──────────────────────────── -->
+  <section class="section">
+    <h2 class="section-title">Beskrivning</h2>
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Anteckningar (valfritt)</mat-label>
+      <textarea matInput [(ngModel)]="notesInput"
+                (ngModelChange)="onNotesChange()"
+                rows="3"
+                placeholder="Syfte, instruktioner eller annat..."></textarea>
+    </mat-form-field>
+  </section>
+
+  <mat-divider />
+
   <!-- ─── Kategorier ────────────────────────────── -->
   <section class="section">
     <h2 class="section-title">Kategorier</h2>
@@ -116,6 +130,27 @@
 
   <mat-divider />
 
+  <!-- ─── Delad länk ───────────────────────────── -->
+  <section class="section">
+    <h2 class="section-title">Delad länk</h2>
+    <p class="hint">Låter vem som helst med länken se arbetsytan utan att logga in.</p>
+    <mat-checkbox
+      [checked]="workspace.isPublic ?? false"
+      (change)="togglePublic($event.checked)">
+      Aktivera delningslänk
+    </mat-checkbox>
+    @if (workspace.isPublic) {
+      <div class="share-link-row">
+        <span class="share-url">{{ shareUrl }}</span>
+        <button mat-icon-button (click)="copyShareUrl()" matTooltip="Kopiera länk">
+          <mat-icon>content_copy</mat-icon>
+        </button>
+      </div>
+    }
+  </section>
+
+  <mat-divider />
+
   <!-- ─── Medlemmar ─────────────────────────────── -->
   <section class="section">
     <h2 class="section-title">Medlemmar</h2>
@@ -126,9 +161,20 @@
           <span class="item-name">{{ workspace.memberEmails[uid] }}</span>
           @if (uid === workspace.ownerId) {
             <span class="owner-label">Ägare</span>
+          } @else if (workspace.admins?.includes(uid)) {
+            <span class="admin-label">Admin</span>
           }
         </div>
-        @if (isOwner && uid !== currentUserId) {
+        @if (isOwner && uid !== workspace.ownerId) {
+          <button mat-icon-button
+                  [color]="(workspace.admins?.includes(uid)) ? 'primary' : ''"
+                  (click)="toggleAdmin(uid)"
+                  [matTooltip]="(workspace.admins?.includes(uid)) ? 'Ta bort admin' : 'Gör till admin'">
+            <mat-icon>{{ (workspace.admins?.includes(uid)) ? 'star' : 'star_border' }}</mat-icon>
+          </button>
+        }
+        @if (canAccessSettings && uid !== workspace.ownerId && uid !== currentUserId
+             && !(workspace.admins?.includes(uid)) ) {
           <button mat-icon-button color="warn" (click)="confirmRemoveMember(uid)">
             <mat-icon>person_remove</mat-icon>
           </button>
@@ -167,10 +213,23 @@
     <mat-divider />
     <section class="section danger-section">
       <h2 class="section-title danger-title">Farlig zon</h2>
-      <button mat-stroked-button color="warn" (click)="confirmDeleteWorkspace()">
-        <mat-icon>delete_forever</mat-icon>
-        Ta bort arbetsyta
-      </button>
+      @if (!workspace.archived) {
+        <button mat-stroked-button color="warn" (click)="confirmArchiveWorkspace()">
+          <mat-icon>archive</mat-icon>
+          Arkivera arbetsyta
+        </button>
+      } @else {
+        <div class="danger-actions">
+          <button mat-stroked-button (click)="unarchiveWorkspace()">
+            <mat-icon>unarchive</mat-icon>
+            Återställ arbetsyta
+          </button>
+          <button mat-stroked-button color="warn" (click)="confirmDeleteWorkspace()">
+            <mat-icon>delete_forever</mat-icon>
+            Radera permanent
+          </button>
+        </div>
+      }
     </section>
   }
 

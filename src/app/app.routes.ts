@@ -25,5 +25,10 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./components/admin/admin.component').then(m => m.AdminComponent)
   },
+  {
+    path: 'view/:id',
+    loadComponent: () =>
+      import('./components/workspace-view/workspace-view.component').then(m => m.WorkspaceViewComponent)
+  },
   { path: '**', redirectTo: '' }
 ];

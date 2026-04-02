@@ -50,6 +50,7 @@ export class WorkspaceListComponent {
   newWorkspaceMode: WorkspaceMode = 'counter';
   showNewForm = false;
   showExamplePicker = false;
+  showArchived = false;
 
   // ── Swipe-to-reveal state ──────────────────────────────
   swipedId: string | null = null;
@@ -108,9 +109,12 @@ export class WorkspaceListComponent {
     this.swipedId = null;
     if (this.isOwner(ws, uid)) {
       this.dialog.open(ConfirmDialogComponent, {
-        data: { title: 'Ta bort arbetsyta', message: `Ta bort "${ws.title}"? Denna åtgärd kan inte ångras.` }
+        data: {
+          title: 'Arkivera arbetsyta',
+          message: `Vill du arkivera "${ws.title}"? Du kan återställa den i inställningarna.`
+        }
       }).afterClosed().subscribe(async confirmed => {
-        if (confirmed) await this.workspaceService.deleteWorkspace(ws.id);
+        if (confirmed) await this.workspaceService.archiveWorkspace(ws.id);
       });
     } else {
       this.dialog.open(ConfirmDialogComponent, {
@@ -119,6 +123,26 @@ export class WorkspaceListComponent {
         if (confirmed) await this.workspaceService.removeMember(ws.id, uid, ws.members, ws.memberEmails);
       });
     }
+  }
+
+  async restoreWorkspace(ws: Workspace): Promise<void> {
+    await this.workspaceService.restoreWorkspace(ws.id);
+  }
+
+  confirmPermanentDelete(ws: Workspace): void {
+    this.dialog.open(ConfirmDialogComponent, {
+      data: { title: 'Radera permanent', message: `Radera "${ws.title}" för alltid? Denna åtgärd kan inte ångras.` }
+    }).afterClosed().subscribe(async confirmed => {
+      if (confirmed) await this.workspaceService.deleteWorkspace(ws.id);
+    });
+  }
+
+  activeWorkspaces(workspaces: Workspace[]): Workspace[] {
+    return workspaces.filter(ws => !ws.archived);
+  }
+
+  archivedWorkspaces(workspaces: Workspace[]): Workspace[] {
+    return workspaces.filter(ws => !!ws.archived);
   }
 
   isOwner(workspace: Workspace, uid: string): boolean {

@@ -20,13 +20,20 @@ const DEV_USER = {
 export class DevAuthService {
   private readonly router = inject(Router);
 
-  readonly user$ = new BehaviorSubject<User | null>(DEV_USER).asObservable();
+  private readonly userSubject = new BehaviorSubject<User | null>(DEV_USER);
+  readonly user$ = this.userSubject.asObservable();
 
   async signInWithGoogle(): Promise<void> {
-    // user$ already emits a user; LoginComponent navigates on its own.
+    this.userSubject.next(DEV_USER);
   }
 
+  async sendMagicLink(_email: string): Promise<void> {}
+  async completeEmailLink(_email: string): Promise<void> {}
+  isEmailLink(): boolean { return false; }
+  getSavedEmail(): string | null { return null; }
+
   async signOut(): Promise<void> {
+    this.userSubject.next(null);
     await this.router.navigate(['/login']);
   }
 }

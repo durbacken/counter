@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { Router } from '@angular/router';
-import { Auth, GoogleAuthProvider, User, authState, signInWithPopup, signOut } from '@angular/fire/auth';
+import { Auth, GoogleAuthProvider, User, authState, isSignInWithEmailLink, sendSignInLinkToEmail, signInWithEmailLink, signInWithPopup, signOut } from '@angular/fire/auth';
+import { environment } from '../../environments/environment';
 import {
   Firestore, collection, doc, getDocs, query,
   setDoc, updateDoc, where, arrayUnion
@@ -19,6 +20,28 @@ export class AuthService {
     await this.onSignIn(result.user);
     // Navigation is handled by the login component watching user$ so that
     // the auth guard always sees an authenticated user when the route loads.
+  }
+
+  async sendMagicLink(email: string): Promise<void> {
+    await sendSignInLinkToEmail(this.auth, email, {
+      url: environment.appUrl + '/login',
+      handleCodeInApp: true,
+    });
+    localStorage.setItem('emailForSignIn', email);
+  }
+
+  async completeEmailLink(email: string): Promise<void> {
+    const result = await signInWithEmailLink(this.auth, email, window.location.href);
+    localStorage.removeItem('emailForSignIn');
+    await this.onSignIn(result.user);
+  }
+
+  isEmailLink(): boolean {
+    return isSignInWithEmailLink(this.auth, window.location.href);
+  }
+
+  getSavedEmail(): string | null {
+    return localStorage.getItem('emailForSignIn');
   }
 
   async signOut(): Promise<void> {

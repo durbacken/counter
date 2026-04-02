@@ -1,6 +1,30 @@
 # Changelog
 
-## Unreleased — 2026-04-01 (continued)
+## 2026-04-02
+
+### Added
+- Landing page on the login/sign-in screen: hero section with logo and tagline, 2×2 feature grid (Räkna, Bocka av, Samarbeta, Historik), sign-in card below, "Gratis & ingen annonsering" footer note; feature grid is hidden during auth flows
+- Workspace description/notes field: editable in settings (auto-saved with debounce), shown subtly above categories in the workspace view with newline support, included in PNG and XLS exports
+- Archiving workspaces instead of deleting: swipe action archives (not deletes); archived workspaces can be restored or permanently deleted from a collapsible section in the workspace list
+- Read-only public share link: owner can toggle a workspace as public in settings; a `/view/:id` route shows the workspace without sign-in; Firestore rules allow unauthenticated reads for public workspaces
+- Settings page access restricted to owners and admins; non-privileged members navigating to `/admin` are redirected back to the workspace view
+- Admin role: owner can promote/demote members to admin in the members list; admins can access settings alongside owners
+
+### Changed
+- Swipe-to-reveal action on workspace cards changed from delete to archive for owners; leave action unchanged for non-owners
+- XLS export is now only available when history is enabled; PNG export always available
+- Notes are preserved on navigation away from settings (saved via debounce, explicit save on back, and flush on component destroy)
+
+### Fixed
+- Full dark mode support: Material toolbar, cards, expansion panels, form fields, dialogs, menus, snackbars, checkboxes, button toggles, autocomplete panel, and disabled flat buttons all themed correctly
+- Chart.js canvas background and text colors adapt to dark mode in real time (live `matchMedia` listener)
+- Comment dialog header text now visible in dark mode
+- Settings checkbox labels (Historik / Kommentarer) now visible in dark mode
+- Disabled "Lägg till" button now visible in dark mode
+
+---
+
+## 2026-04-01 (continued)
 
 ### Added
 - Change history: every counter increment/decrement and checkbox toggle is recorded in Firestore (`workspaces/{id}/changes` subcollection)

@@ -112,8 +112,31 @@ export class DevWorkspaceService {
     this.patchWorkspace(workspaceId, { members, memberEmails });
   }
 
+  async setAdmin(workspaceId: string, uid: string, isAdmin: boolean): Promise<void> {
+    const admins = this.ws$.value[workspaceId]?.admins ?? [];
+    this.patchWorkspace(workspaceId, {
+      admins: isAdmin ? [...new Set([...admins, uid])] : admins.filter(a => a !== uid)
+    });
+  }
+
   async updateSettings(workspaceId: string, enableComments: boolean, enableHistory: boolean): Promise<void> {
     this.patchWorkspace(workspaceId, { enableComments, enableHistory });
+  }
+
+  async updateNotes(workspaceId: string, notes: string): Promise<void> {
+    this.patchWorkspace(workspaceId, { notes });
+  }
+
+  async archiveWorkspace(workspaceId: string): Promise<void> {
+    this.patchWorkspace(workspaceId, { archived: true });
+  }
+
+  async restoreWorkspace(workspaceId: string): Promise<void> {
+    this.patchWorkspace(workspaceId, { archived: false });
+  }
+
+  async setPublic(workspaceId: string, isPublic: boolean): Promise<void> {
+    this.patchWorkspace(workspaceId, { isPublic });
   }
 
   async deleteWorkspace(workspaceId: string): Promise<void> {

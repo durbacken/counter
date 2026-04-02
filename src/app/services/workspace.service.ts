@@ -2,10 +2,10 @@ import { Injectable, inject } from '@angular/core';
 import {
   Firestore, collection, doc, addDoc, updateDoc, deleteDoc,
   docData, collectionData, query, where, getDocs,
-  runTransaction, arrayUnion, serverTimestamp, orderBy
+  runTransaction, arrayUnion, arrayRemove, serverTimestamp, orderBy
 } from '@angular/fire/firestore';
 import { Observable } from 'rxjs';
-import emailjs from '@emailjs/browser';
+// emailjs is dynamically imported in shareWithEmail to keep it out of the initial bundle
 import { environment } from '../../environments/environment';
 import { Category, ChangeEvent, Workspace, WorkspaceMode } from '../models/counter.model';
 
@@ -131,6 +131,7 @@ export class WorkspaceService {
       });
     }
 
+    const { default: emailjs } = await import('@emailjs/browser');
     await emailjs.send(
       environment.emailjs.serviceId,
       environment.emailjs.templateId,
@@ -156,8 +157,30 @@ export class WorkspaceService {
     await updateDoc(doc(this.firestore, 'workspaces', workspaceId), { members, memberEmails });
   }
 
+  async setAdmin(workspaceId: string, uid: string, isAdmin: boolean): Promise<void> {
+    await updateDoc(doc(this.firestore, 'workspaces', workspaceId), {
+      admins: isAdmin ? arrayUnion(uid) : arrayRemove(uid)
+    });
+  }
+
   async updateSettings(workspaceId: string, enableComments: boolean, enableHistory: boolean): Promise<void> {
     await updateDoc(doc(this.firestore, 'workspaces', workspaceId), { enableComments, enableHistory });
+  }
+
+  async updateNotes(workspaceId: string, notes: string): Promise<void> {
+    await updateDoc(doc(this.firestore, 'workspaces', workspaceId), { notes });
+  }
+
+  async archiveWorkspace(workspaceId: string): Promise<void> {
+    await updateDoc(doc(this.firestore, 'workspaces', workspaceId), { archived: true });
+  }
+
+  async restoreWorkspace(workspaceId: string): Promise<void> {
+    await updateDoc(doc(this.firestore, 'workspaces', workspaceId), { archived: false });
+  }
+
+  async setPublic(workspaceId: string, isPublic: boolean): Promise<void> {
+    await updateDoc(doc(this.firestore, 'workspaces', workspaceId), { isPublic });
   }
 
   async deleteWorkspace(workspaceId: string): Promise<void> {

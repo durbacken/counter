@@ -56,28 +56,26 @@ import { MatButtonModule } from '@angular/material/button';
       font-size: 22px;
       font-weight: 300;
       margin: 0 0 4px;
-      color: #616161;
+      color: var(--text-secondary);
     }
 
     .byline {
       font-size: 12px;
-      color: #9e9e9e;
+      color: var(--text-secondary);
       margin: 0 0 16px;
     }
 
     p {
       font-size: 14px;
       line-height: 1.65;
-      color: #424242;
+      color: var(--text-primary);
       margin: 0 0 12px;
     }
-
-    .intro { color: #212121; }
 
     .email-link {
       display: inline-block;
       font-size: 14px;
-      color: #1565c0;
+      color: #1976d2;
       margin-bottom: 16px;
       text-decoration: none;
       &:hover { text-decoration: underline; }
@@ -85,7 +83,7 @@ import { MatButtonModule } from '@angular/material/button';
 
     .sign-off {
       font-size: 14px;
-      color: #757575;
+      color: var(--text-secondary);
       margin-bottom: 4px;
     }
   `]
