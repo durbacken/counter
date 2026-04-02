@@ -28,15 +28,17 @@
         <div class="empty-state">
           <mat-icon class="empty-icon">workspaces</mat-icon>
           <p>Inga arbetsytor ännu.</p>
-          <button mat-flat-button color="primary" (click)="showNewForm = true">
-            <mat-icon>add</mat-icon>
-            Skapa din första
-          </button>
-          <button mat-button class="example-toggle"
-                  (click)="showExamplePicker = !showExamplePicker">
-            Eller prova ett exempel
-            <mat-icon>{{ showExamplePicker ? 'expand_less' : 'expand_more' }}</mat-icon>
-          </button>
+          <div class="empty-actions">
+            <button mat-flat-button color="primary" (click)="showNewForm = true">
+              <mat-icon>add</mat-icon>
+              Skapa din första
+            </button>
+            <button mat-button class="example-toggle"
+                    (click)="showExamplePicker = !showExamplePicker">
+              Eller prova ett exempel
+              <mat-icon>{{ showExamplePicker ? 'expand_less' : 'expand_more' }}</mat-icon>
+            </button>
+          </div>
           @if (showExamplePicker) {
             <div class="example-choices">
               <button mat-stroked-button (click)="createExample('counter')">
@@ -192,6 +194,17 @@
       <button mat-flat-button color="primary" class="fab" (click)="showNewForm = true">
         <mat-icon>add</mat-icon>
         Ny arbetsyta
+      </button>
+    </div>
+  }
+
+  @if (installPrompt) {
+    <div class="install-banner">
+      <mat-icon class="install-icon">install_mobile</mat-icon>
+      <span>Lägg till på hemskärmen för snabb åtkomst</span>
+      <button mat-flat-button color="primary" (click)="promptInstall()">Installera</button>
+      <button mat-icon-button (click)="installPrompt = null" aria-label="Stäng">
+        <mat-icon>close</mat-icon>
       </button>
     </div>
   }

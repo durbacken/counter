@@ -42,9 +42,13 @@
   border-radius: 12px;
   box-shadow: var(--shadow);
   padding: 10px 12px;
-  margin-bottom: 16px;
+  margin: 0 16px 16px;
+  max-width: 640px;
+  width: calc(100% - 32px);
+  align-self: center;
   font-size: 14px;
   color: var(--text-primary);
+  box-sizing: border-box;
 
   .install-icon { color: #1976d2; flex-shrink: 0; }
   span { flex: 1; }
@@ -223,11 +227,22 @@
   p { font-size: 16px; margin-bottom: 24px; }
 }
 
+.empty-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+  max-width: 240px;
+  margin: 0 auto;
+
+  button { width: 100%; }
+}
+
 .example-toggle {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 2px;
-  margin-top: 12px;
   font-size: 13px;
   color: var(--text-secondary);
 
