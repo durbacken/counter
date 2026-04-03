@@ -1,5 +1,6 @@
 import { Component, ViewChild, inject } from '@angular/core';
 import { AsyncPipe } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { combineLatest, firstValueFrom, switchMap } from 'rxjs';
 import { map, shareReplay, startWith } from 'rxjs/operators';
@@ -11,7 +12,11 @@ import { MatDividerModule } from '@angular/material/divider';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
 import { MatDialog } from '@angular/material/dialog';
+import { ClipboardModule, Clipboard } from '@angular/cdk/clipboard';
 import { AuthService } from '../../services/auth.service';
 import { WorkspaceService } from '../../services/workspace.service';
 import { ChartComponent } from '../chart/chart.component';
@@ -25,6 +30,7 @@ import { Category, ChangeEvent, ChangeType, Workspace } from '../../models/count
   selector: 'app-main',
   imports: [
     AsyncPipe,
+    FormsModule,
     MatToolbarModule,
     MatButtonModule,
     MatIconModule,
@@ -33,6 +39,10 @@ import { Category, ChangeEvent, ChangeType, Workspace } from '../../models/count
     MatCheckboxModule,
     MatMenuModule,
     MatProgressBarModule,
+    MatSnackBarModule,
+    MatFormFieldModule,
+    MatInputModule,
+    ClipboardModule,
     ChartComponent,
     ChangeHistoryComponent,
     FooterComponent,
@@ -46,10 +56,21 @@ export class MainComponent {
   private readonly workspaceService = inject(WorkspaceService);
   private readonly auth = inject(AuthService);
   private readonly dialog = inject(MatDialog);
+  private readonly snackBar = inject(MatSnackBar);
+  private readonly clipboard = inject(Clipboard);
 
   @ViewChild(ChartComponent) private chartComponent?: ChartComponent;
 
   showExampleHint = false;
+
+  // ─── Undo ───────────────────────────────────────────────
+  private lastUndoAction: { categoryId: string; action: 'increment' | 'decrement' | 'toggle' } | null = null;
+
+  // ─── Inline edit ────────────────────────────────────────
+  editMode = false;
+  editingCategoryId: string | null = null;
+  editingCategoryName = '';
+  newInlineCategoryName = '';
 
   readonly workspace$ = this.route.paramMap.pipe(
     switchMap(params => this.workspaceService.getWorkspace(params.get('id')!))
@@ -77,11 +98,35 @@ export class MainComponent {
     return this.route.snapshot.paramMap.get('id')!;
   }
 
+  // ─── Undo snackbar ──────────────────────────────────────
+
+  private showUndoSnackbar(category: Category, action: 'increment' | 'decrement' | 'toggle'): void {
+    this.lastUndoAction = { categoryId: category.id, action };
+    const ref = this.snackBar.open(`${category.name} ändrad`, 'Ångra', { duration: 4000 });
+    ref.onAction().subscribe(() => this.undoLastAction());
+  }
+
+  private async undoLastAction(): Promise<void> {
+    if (!this.lastUndoAction) return;
+    const { categoryId, action } = this.lastUndoAction;
+    this.lastUndoAction = null;
+    if (action === 'increment') {
+      await this.workspaceService.decrement(this.workspaceId, categoryId);
+    } else if (action === 'decrement') {
+      await this.workspaceService.increment(this.workspaceId, categoryId);
+    } else {
+      await this.workspaceService.toggleCheck(this.workspaceId, categoryId);
+    }
+  }
+
+  // ─── Counter / checkbox actions ─────────────────────────
+
   async increment(category: Category): Promise<void> {
     const prev = category.count;
     const next = prev + 1;
     await this.workspaceService.increment(this.workspaceId, category.id);
     await this.promptAndLog(category, 'increment', prev, next, `Räknaren ökas: ${prev} → ${next}`);
+    this.showUndoSnackbar(category, 'increment');
   }
 
   async decrement(category: Category): Promise<void> {
@@ -90,6 +135,7 @@ export class MainComponent {
     const next = Math.max(0, prev - 1);
     await this.workspaceService.decrement(this.workspaceId, category.id);
     await this.promptAndLog(category, 'decrement', prev, next, `Räknaren minskas: ${prev} → ${next}`);
+    this.showUndoSnackbar(category, 'decrement');
   }
 
   async toggleCheck(category: Category): Promise<void> {
@@ -102,7 +148,75 @@ export class MainComponent {
       willBeChecked,
       willBeChecked ? 'Markeras som klar' : 'Markeras som ej klar'
     );
+    this.showUndoSnackbar(category, 'toggle');
   }
+
+  // ─── Inline category management ─────────────────────────
+
+  startInlineEdit(category: Category): void {
+    this.editingCategoryId = category.id;
+    this.editingCategoryName = category.name;
+  }
+
+  cancelInlineEdit(): void {
+    this.editingCategoryId = null;
+    this.editingCategoryName = '';
+  }
+
+  saveInlineEdit(categories: Category[]): void {
+    const name = this.editingCategoryName.trim();
+    if (!name || !this.editingCategoryId) return;
+    const updated = categories.map(c =>
+      c.id === this.editingCategoryId ? { ...c, name } : c
+    );
+    this.workspaceService.updateCategories(this.workspaceId, updated);
+    this.editingCategoryId = null;
+    this.editingCategoryName = '';
+  }
+
+  addInlineCategory(categories: Category[]): void {
+    const name = this.newInlineCategoryName.trim();
+    if (!name) return;
+    const newCategory: Category = { id: crypto.randomUUID(), name, count: 0 };
+    const updated = [...categories, newCategory];
+    this.workspaceService.updateCategories(this.workspaceId, updated);
+    this.newInlineCategoryName = '';
+  }
+
+  confirmDeleteInline(category: Category, categories: Category[]): void {
+    this.dialog.open(ConfirmDialogComponent, {
+      data: { title: 'Ta bort kategori', message: `Ta bort "${category.name}"?` }
+    }).afterClosed().subscribe(confirmed => {
+      if (!confirmed) return;
+      const updated = categories.filter(c => c.id !== category.id);
+      this.workspaceService.updateCategories(this.workspaceId, updated);
+    });
+  }
+
+  exitEditMode(): void {
+    this.editMode = false;
+    this.editingCategoryId = null;
+    this.editingCategoryName = '';
+    this.newInlineCategoryName = '';
+  }
+
+  // ─── Share link ─────────────────────────────────────────
+
+  copyShareUrl(workspace: Workspace): void {
+    if (workspace.isPublic) {
+      this.clipboard.copy(`${window.location.origin}/view/${this.workspaceId}`);
+      this.snackBar.open('Länk kopierad!', undefined, { duration: 2500 });
+    } else {
+      const ref = this.snackBar.open(
+        'Aktivera delningslänk i inställningarna',
+        'Inställningar',
+        { duration: 4000 }
+      );
+      ref.onAction().subscribe(() => this.goToAdmin());
+    }
+  }
+
+  // ─── Existing methods ────────────────────────────────────
 
   private async promptAndLog(
     category: Category,

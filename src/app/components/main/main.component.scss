@@ -262,3 +262,70 @@
   color: var(--text-secondary);
   margin: 0;
 }
+
+/* ─── Inline edit ─────────────────────────────────────── */
+.inline-edit-input {
+  flex: 1;
+  font-size: 16px;
+  border: none;
+  border-bottom: 2px solid #1976d2;
+  outline: none;
+  background: transparent;
+  color: var(--text-primary);
+  padding: 2px 0;
+  min-width: 0;
+}
+
+.inline-edit-actions {
+  display: flex;
+  gap: 0;
+  flex-shrink: 0;
+}
+
+.inline-row-actions {
+  display: flex;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.inline-add-row {
+  display: flex;
+  align-items: center;
+  padding: 6px 16px 6px 16px;
+  gap: 4px;
+}
+
+.inline-add-input {
+  flex: 1;
+  font-size: 15px;
+  border: none;
+  border-bottom: 1px solid var(--divider);
+  outline: none;
+  background: transparent;
+  color: var(--text-primary);
+  padding: 6px 0;
+  min-width: 0;
+
+  &:focus { border-bottom-color: #1976d2; }
+
+  &::placeholder { color: var(--text-secondary); }
+}
+
+/* ─── Edit list toggle ───────────────────────────────── */
+.edit-list-toggle {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 4px;
+}
+
+.edit-list-btn {
+  font-size: 13px;
+  color: var(--text-secondary);
+  gap: 2px;
+
+  mat-icon { font-size: 16px; width: 16px; height: 16px; }
+}
+
+.done-edit-btn {
+  height: 36px;
+}
