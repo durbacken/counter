@@ -2,10 +2,11 @@ import { Component, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
 
 @Component({
   selector: 'app-about-dialog',
-  imports: [MatDialogModule, MatButtonModule],
+  imports: [MatDialogModule, MatButtonModule, MatIconModule],
   template: `
     <mat-dialog-content class="about-content">
       <img src="icons/icon-192x192.png" class="about-logo" alt="Koll på läget?" />
@@ -23,6 +24,7 @@ import { MatButtonModule } from '@angular/material/button';
       </p>
 
       <a href="mailto:tobias.sjobeck&#64;gmail.com" class="email-link">
+        <mat-icon class="email-icon">mail</mat-icon>
         tobias.sjobeck&#64;gmail.com
       </a>
 
@@ -75,12 +77,20 @@ import { MatButtonModule } from '@angular/material/button';
     }
 
     .email-link {
-      display: inline-block;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
       font-size: 14px;
       color: #1976d2;
       margin-bottom: 16px;
       text-decoration: none;
       &:hover { text-decoration: underline; }
+    }
+
+    .email-icon {
+      font-size: 16px;
+      width: 16px;
+      height: 16px;
     }
 
     .sign-off {

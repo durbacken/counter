@@ -11,10 +11,7 @@ import { AboutDialogComponent } from '../about-dialog/about-dialog.component';
             (keydown.enter)="openAbout()" aria-label="Om Koll på läget?">
       <img src="icons/icon-192x192.png" class="footer-logo" alt="" />
       Koll på läget? &nbsp;·&nbsp; &copy; {{ year }} Durbacken Design
-      <a href="mailto:tobias.sjobeck&#64;gmail.com" aria-label="Maila oss"
-         (click)="$event.stopPropagation()">
-        <mat-icon class="mail-icon">mail</mat-icon>
-      </a>
+      <mat-icon class="mail-icon">mail</mat-icon>
     </footer>
   `,
   styles: [`
@@ -44,13 +41,6 @@ import { AboutDialogComponent } from '../about-dialog/about-dialog.component';
       filter: grayscale(1);
       opacity: 0.5;
       margin-bottom: 1px;
-    }
-
-    a {
-      color: #bdbdbd;
-      display: flex;
-      align-items: center;
-      &:hover { color: #9e9e9e; }
     }
 
     .mail-icon {
