@@ -50,6 +50,7 @@
   box-shadow: var(--shadow);
   padding: 16px;
   text-align: center;
+  cursor: pointer;
 
   .feature-icon {
     font-size: 28px;
@@ -72,6 +73,28 @@
     margin: 0;
     line-height: 1.45;
   }
+}
+
+/* ─── Feature hint ──────────────────────────────────── */
+.feature-hint {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #1976d2;
+  margin: -16px 0 0;
+  animation: hint-pop 2.5s ease forwards;
+
+  mat-icon { font-size: 18px; width: 18px; height: 18px; }
+}
+
+@keyframes hint-pop {
+  0%   { opacity: 0; transform: translateY(-4px); }
+  15%  { opacity: 1; transform: translateY(0); }
+  75%  { opacity: 1; }
+  100% { opacity: 0; }
 }
 
 /* ─── Sign-in card ───────────────────────────────────── */

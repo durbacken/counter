@@ -61,6 +61,55 @@ export class MainComponent {
 
   showExampleHint = false;
 
+  // ─── Add categories panel ───────────────────────────────
+  addPanelOpen = false;
+  draftNames: string[] = ['', '', ''];
+
+  openAddPanel(): void {
+    this.addPanelOpen = true;
+    this.draftNames = ['', '', ''];
+  }
+
+  closeAddPanel(): void {
+    this.addPanelOpen = false;
+  }
+
+  onDraftChange(i: number): void {
+    if (i === this.draftNames.length - 1 && this.draftNames[i].trim()) {
+      this.draftNames.push('');
+    }
+  }
+
+  onDraftEnter(i: number): void {
+    if (i === this.draftNames.length - 1 && this.draftNames[i].trim()) {
+      this.draftNames.push('');
+    }
+    setTimeout(() => {
+      const inputs = document.querySelectorAll<HTMLInputElement>('.draft-input');
+      inputs[i + 1]?.focus();
+    });
+  }
+
+  removeDraft(i: number): void {
+    if (this.draftNames.length === 1) {
+      this.draftNames[0] = '';
+    } else {
+      this.draftNames.splice(i, 1);
+    }
+  }
+
+  get hasAnyDraft(): boolean {
+    return this.draftNames.some(n => n.trim().length > 0);
+  }
+
+  async saveDraftCategories(existingCategories: Category[]): Promise<void> {
+    const names = this.draftNames.map(n => n.trim()).filter(n => n.length > 0);
+    if (!names.length) return;
+    const newCategories: Category[] = names.map(name => ({ id: crypto.randomUUID(), name, count: 0 }));
+    await this.workspaceService.updateCategories(this.workspaceId, [...existingCategories, ...newCategories]);
+    this.closeAddPanel();
+  }
+
   // ─── Undo ───────────────────────────────────────────────
   private lastUndoAction: { categoryId: string; action: 'increment' | 'decrement' | 'toggle' } | null = null;
 
@@ -183,7 +232,7 @@ export class MainComponent {
 
   confirmDeleteInline(category: Category, categories: Category[]): void {
     this.dialog.open(ConfirmDialogComponent, {
-      data: { title: 'Ta bort kategori', message: `Ta bort "${category.name}"?` }
+      data: { title: 'Ta bort punkt', message: `Ta bort "${category.name}"?` }
     }).afterClosed().subscribe(confirmed => {
       if (!confirmed) return;
       const updated = categories.filter(c => c.id !== category.id);
@@ -607,7 +656,7 @@ export class MainComponent {
         'Datum':      date.toLocaleDateString('sv-SE'),
         'Tid':        date.toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' }),
         'Användare':  c.userEmail,
-        'Kategori':   c.categoryName,
+        'Punkt':      c.categoryName,
         'Ändring':    this.describeChange(c),
         'Kommentar':  c.comment ?? '',
       };

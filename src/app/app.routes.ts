@@ -14,6 +14,12 @@ export const routes: Routes = [
       import('./components/workspace-list/workspace-list.component').then(m => m.WorkspaceListComponent)
   },
   {
+    path: 'new/:mode',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./components/new-workspace/new-workspace.component').then(m => m.NewWorkspaceComponent)
+  },
+  {
     path: 'workspace/:id',
     canActivate: [authGuard],
     loadComponent: () =>

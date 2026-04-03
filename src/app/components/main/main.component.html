@@ -107,7 +107,7 @@
             <div class="inline-add-row">
               <input class="inline-add-input" [(ngModel)]="newInlineCategoryName"
                      (keydown.enter)="addInlineCategory(workspace.categories)"
-                     placeholder="Ny kategori…" autocomplete="off" />
+                     placeholder="Ny punkt…" autocomplete="off" />
               <button mat-icon-button color="primary"
                       [disabled]="!newInlineCategoryName.trim()"
                       (click)="addInlineCategory(workspace.categories)">
@@ -163,7 +163,7 @@
             <div class="inline-add-row">
               <input class="inline-add-input" [(ngModel)]="newInlineCategoryName"
                      (keydown.enter)="addInlineCategory(workspace.categories)"
-                     placeholder="Ny kategori…" autocomplete="off" />
+                     placeholder="Ny punkt…" autocomplete="off" />
               <button mat-icon-button color="primary"
                       [disabled]="!newInlineCategoryName.trim()"
                       (click)="addInlineCategory(workspace.categories)">
@@ -226,14 +226,20 @@
 
     } @else {
       <div class="empty-state">
-        <p class="empty-title">Din arbetsyta är redo!</p>
+        @let owner = isOwner$ | async;
+        <p class="empty-title">{{ (workspace.mode ?? 'counter') === 'checkbox' ? 'Din checklista är redo!' : 'Din räknare är redo!' }}</p>
         <p class="empty-sub">Följ stegen nedan för att komma igång.</p>
 
         <div class="empty-steps">
-          <div class="empty-step">
+          <div class="empty-step"
+               [class.empty-step-clickable]="owner"
+               (click)="owner && openAddPanel()">
             <span class="step-number">1</span>
             <div>
-              <strong>Lägg till kategorier</strong>
+              <strong>
+                Lägg till punkter
+                @if (owner) { <mat-icon class="step-arrow">chevron_right</mat-icon> }
+              </strong>
               <span>
                 @if ((workspace.mode ?? 'counter') === 'counter') {
                   Skapa de saker du vill räkna — t.ex. "Kaffe", "Möten" eller "Pauser".
@@ -243,49 +249,81 @@
               </span>
             </div>
           </div>
-          <div class="empty-step">
-            <span class="step-number">2</span>
-            <div>
-              <strong>Bjud in ditt team</strong>
-              <span>Dela arbetsytan med kollegor — alla ser uppdateringar i realtid.</span>
+          @if (!addPanelOpen) {
+            <div class="empty-step">
+              <span class="step-number">2</span>
+              <div>
+                <strong>Bjud in ditt team</strong>
+                <span>Dela med kollegor — alla ser uppdateringar i realtid.</span>
+              </div>
             </div>
-          </div>
-          <div class="empty-step">
-            <span class="step-number">3</span>
-            <div>
-              @if ((workspace.mode ?? 'counter') === 'counter') {
-                <strong>Räkna tillsammans</strong>
-                <span>Tryck på + och − för att räkna. Exportera resultaten som bild eller Excel.</span>
-              } @else {
-                <strong>Bocka av tillsammans</strong>
-                <span>Markera vad som är klart. Följ framsteg i procent i realtid.</span>
-              }
+            <div class="empty-step">
+              <span class="step-number">3</span>
+              <div>
+                @if ((workspace.mode ?? 'counter') === 'counter') {
+                  <strong>Räkna tillsammans</strong>
+                  <span>Tryck på + och − för att räkna. Exportera resultaten som bild eller Excel.</span>
+                } @else {
+                  <strong>Bocka av tillsammans</strong>
+                  <span>Markera vad som är klart. Följ framsteg i procent i realtid.</span>
+                }
+              </div>
             </div>
-          </div>
+          }
         </div>
 
-        @if (isOwner$ | async) {
-          <button mat-flat-button color="primary" class="empty-btn" (click)="goToAdmin()">
-            <mat-icon>add</mat-icon>
-            Lägg till kategorier
-          </button>
-          <button mat-button class="example-toggle" (click)="showExampleHint = !showExampleHint">
-            Eller prova ett exempel
-            <mat-icon>{{ showExampleHint ? 'expand_less' : 'expand_more' }}</mat-icon>
-          </button>
-          @if (showExampleHint) {
-            <div class="example-choices">
-              <p class="example-preview">
-                @if ((workspace.mode ?? 'counter') === 'counter') {
-                  Kaffe · Möten · Pauser · Samtal
-                } @else {
-                  Handla mat · Betala räkningar · Städa · Ring läkaren
-                }
-              </p>
-              <button mat-stroked-button (click)="loadExample(workspace)">
-                Lägg till dessa kategorier
-              </button>
+        @if (owner) {
+          @if (addPanelOpen) {
+            <div class="add-panel">
+              <p class="add-panel-title">Lägg till punkter</p>
+              @for (name of draftNames; track $index) {
+                <div class="draft-row">
+                  <input class="draft-input"
+                         [(ngModel)]="draftNames[$index]"
+                         (ngModelChange)="onDraftChange($index)"
+                         (keydown.enter)="onDraftEnter($index)"
+                         [placeholder]="'Punkt ' + ($index + 1)"
+                         autocomplete="off" />
+                  @if (draftNames.length > 1 || draftNames[$index]) {
+                    <button mat-icon-button (click)="removeDraft($index)" aria-label="Ta bort">
+                      <mat-icon>close</mat-icon>
+                    </button>
+                  }
+                </div>
+              }
+              <div class="add-panel-actions">
+                <button mat-button (click)="closeAddPanel()">Avbryt</button>
+                <button mat-flat-button color="primary"
+                        [disabled]="!hasAnyDraft"
+                        (click)="saveDraftCategories(workspace.categories)">
+                  <mat-icon>check</mat-icon>
+                  Spara
+                </button>
+              </div>
             </div>
+          } @else {
+            <button mat-flat-button color="primary" class="empty-btn" (click)="openAddPanel()">
+              <mat-icon>add</mat-icon>
+              Lägg till punkter
+            </button>
+            <button mat-button class="example-toggle" (click)="showExampleHint = !showExampleHint">
+              Eller prova ett exempel
+              <mat-icon>{{ showExampleHint ? 'expand_less' : 'expand_more' }}</mat-icon>
+            </button>
+            @if (showExampleHint) {
+              <div class="example-choices">
+                <p class="example-preview">
+                  @if ((workspace.mode ?? 'counter') === 'counter') {
+                    Kaffe · Möten · Pauser · Samtal
+                  } @else {
+                    Handla mat · Betala räkningar · Städa · Ring läkaren
+                  }
+                </p>
+                <button mat-stroked-button (click)="loadExample(workspace)">
+                  Lägg till dessa punkter
+                </button>
+              </div>
+            }
           }
         }
       </div>

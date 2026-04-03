@@ -31,7 +31,7 @@ interface ViewState {
 
           <div class="view-content">
             @if (ws.categories.length === 0) {
-              <p class="empty">Inga kategorier.</p>
+              <p class="empty">Inga punkter.</p>
             }
 
             @if ((ws.mode ?? 'counter') === 'counter') {
@@ -73,7 +73,7 @@ interface ViewState {
       } @else {
         <div class="error-page">
           <mat-icon class="error-icon">lock</mat-icon>
-          <p>Den här arbetsytan finns inte eller är inte tillgänglig för delning.</p>
+          <p>Den här länken finns inte eller är inte tillgänglig för delning.</p>
         </div>
       }
     }

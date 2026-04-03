@@ -32,7 +32,7 @@ interface ShareDialogData {
     MatDividerModule,
   ],
   template: `
-    <h2 mat-dialog-title>Dela arbetsyta</h2>
+    <h2 mat-dialog-title>Dela</h2>
     <mat-dialog-content>
 
       <!-- ─── Delad länk ─────────────────────────────── -->
@@ -52,10 +52,10 @@ interface ShareDialogData {
           </div>
           <p class="link-hint">
             <mat-icon class="hint-icon">info</mat-icon>
-            Vem som helst med länken kan se denna arbetsyta utan att logga in.
+            Vem som helst med länken kan se denna {{ data.workspace.mode === 'checkbox' ? 'checklista' : 'räknare' }} utan att logga in.
           </p>
         } @else if (!data.canManage) {
-          <p class="link-hint muted">Ägaren har inte aktiverat delningslänk för denna arbetsyta.</p>
+          <p class="link-hint muted">Ägaren har inte aktiverat delningslänk för denna {{ data.workspace.mode === 'checkbox' ? 'checklista' : 'räknare' }}.</p>
         }
       </div>
 

@@ -28,33 +28,33 @@
     }
 
     @if (workspaces$ | async; as workspaces) {
-      @if (activeWorkspaces(workspaces).length === 0 && !showNewForm) {
+      @if (activeWorkspaces(workspaces).length === 0) {
         <div class="empty-state">
           <p class="empty-tagline">Håll koll på det som räknas — tillsammans</p>
 
           <div class="empty-features">
-            <div class="empty-feature">
+            <div class="empty-feature" (click)="onFeatureCardClick()">
               <mat-icon>tag</mat-icon>
               <div>
                 <strong>Räkna</strong>
                 <span>Räkna förekomster i realtid med enkla plus/minus-knappar.</span>
               </div>
             </div>
-            <div class="empty-feature">
+            <div class="empty-feature" (click)="onFeatureCardClick()">
               <mat-icon>check_box</mat-icon>
               <div>
                 <strong>Bocka av</strong>
                 <span>Skapa checklistor och följ framsteg i procent.</span>
               </div>
             </div>
-            <div class="empty-feature">
+            <div class="empty-feature" (click)="onFeatureCardClick()">
               <mat-icon>group</mat-icon>
               <div>
                 <strong>Samarbeta</strong>
                 <span>Bjud in andra — alla ser uppdateringar direkt.</span>
               </div>
             </div>
-            <div class="empty-feature">
+            <div class="empty-feature" (click)="onFeatureCardClick()">
               <mat-icon>history</mat-icon>
               <div>
                 <strong>Historik</strong>
@@ -62,6 +62,13 @@
               </div>
             </div>
           </div>
+
+          @if (featureHintVisible) {
+            <p class="feature-hint">
+              <mat-icon>arrow_downward</mat-icon>
+              Använd knapparna nedan för att komma igång
+            </p>
+          }
 
           <p class="empty-cta">Kom igång på några sekunder:</p>
 
@@ -145,7 +152,7 @@
                     } @else {
                       <span>
                         <mat-icon class="meta-icon">tag</mat-icon>
-                        {{ ws.categories.length }} kategorier
+                        {{ ws.categories.length }} punkter
                       </span>
                     }
                     <span>
@@ -200,55 +207,9 @@
       }
     }
 
-    <!-- New workspace form -->
-    @if (showNewForm) {
-      <div class="new-workspace-form">
-        <div class="form-header">
-          <div class="form-title-row">
-            <mat-icon>{{ newWorkspaceMode === 'counter' ? 'tag' : 'check_box' }}</mat-icon>
-            <span class="form-title">{{ newWorkspaceMode === 'counter' ? 'Ny räknare' : 'Ny checklista' }}</span>
-          </div>
-          <span class="form-sub">
-            @if (newWorkspaceMode === 'counter') {
-              Räkna förekomster i realtid — lägg till kategorier när den är skapad.
-            } @else {
-              Bocka av punkt för punkt — lägg till kategorier när den är skapad.
-            }
-          </span>
-        </div>
-
-        <mat-form-field appearance="outline" class="full-width">
-          <mat-label>Namn</mat-label>
-          <input matInput
-                 [(ngModel)]="newWorkspaceTitle"
-                 (keydown.enter)="createWorkspace()"
-                 autocomplete="off"
-                 autofocus
-                 [placeholder]="newWorkspaceMode === 'counter' ? 'T.ex. Kafferäknare, Lagermöte…' : 'T.ex. Packlista, Veckans uppgifter…'" />
-        </mat-form-field>
-
-        <mat-form-field appearance="outline" class="full-width">
-          <mat-label>Beskrivning (valfritt)</mat-label>
-          <textarea matInput
-                    [(ngModel)]="newWorkspaceNotes"
-                    rows="2"
-                    placeholder="Vad ska du hålla koll på?"></textarea>
-        </mat-form-field>
-
-        <div class="form-actions">
-          <button mat-button (click)="showNewForm = false; newWorkspaceTitle = ''; newWorkspaceNotes = ''; newWorkspaceMode = 'counter'">Avbryt</button>
-          <button mat-flat-button color="primary"
-                  (click)="createWorkspace()"
-                  [disabled]="!newWorkspaceTitle.trim()">
-            Skapa
-          </button>
-        </div>
-      </div>
-    }
-
   </div>
 
-  @if (!showNewForm && activeWorkspaces((workspaces$ | async) ?? []).length > 0) {
+  @if (activeWorkspaces((workspaces$ | async) ?? []).length > 0) {
     <div class="fab-row">
       <div class="new-ws-choices">
         <button class="new-ws-btn" (click)="startNew('counter')">

@@ -10,27 +10,33 @@
   <!-- Feature highlights -->
   @if (!completingLink && !needsEmailConfirm && !linkSent) {
     <section class="features">
-      <div class="feature">
+      <div class="feature" (click)="onFeatureCardClick()">
         <mat-icon class="feature-icon">tag</mat-icon>
         <h3>Räkna</h3>
         <p>Räkna förekomster i realtid med enkla plus/minus-knappar.</p>
       </div>
-      <div class="feature">
+      <div class="feature" (click)="onFeatureCardClick()">
         <mat-icon class="feature-icon">check_box</mat-icon>
         <h3>Bocka av</h3>
         <p>Skapa checklistor och följ framsteg med procentvisning.</p>
       </div>
-      <div class="feature">
+      <div class="feature" (click)="onFeatureCardClick()">
         <mat-icon class="feature-icon">group</mat-icon>
         <h3>Samarbeta</h3>
         <p>Bjud in andra — alla ser uppdateringar direkt i realtid.</p>
       </div>
-      <div class="feature">
+      <div class="feature" (click)="onFeatureCardClick()">
         <mat-icon class="feature-icon">history</mat-icon>
         <h3>Historik</h3>
         <p>Spåra ändringar och exportera data som bild eller Excel.</p>
       </div>
     </section>
+    @if (featureHintVisible) {
+      <p class="feature-hint">
+        <mat-icon>arrow_downward</mat-icon>
+        Logga in nedan för att komma igång
+      </p>
+    }
   }
 
   <!-- Sign-in card -->

@@ -1,0 +1,40 @@
+<mat-toolbar color="primary" class="toolbar">
+  <button mat-icon-button (click)="goBack()" aria-label="Tillbaka">
+    <mat-icon>arrow_back</mat-icon>
+  </button>
+  <span class="toolbar-title">{{ isCounter ? 'Ny räknare' : 'Ny checklista' }}</span>
+</mat-toolbar>
+
+<div class="page">
+  <div class="hero">
+    <div class="hero-icon">
+      <mat-icon>{{ isCounter ? 'tag' : 'check_box' }}</mat-icon>
+    </div>
+    <h1 class="hero-title">{{ isCounter ? 'Ny räknare' : 'Ny checklista' }}</h1>
+    <p class="hero-sub">
+      @if (isCounter) {
+        Räkna förekomster i realtid med plus/minus-knappar. Lägg till vad du vill räkna när du har skapat den.
+      } @else {
+        Bocka av och följ framsteg i procent i realtid. Lägg till dina punkter när du har skapat den.
+      }
+    </p>
+  </div>
+
+  <div class="form">
+    <mat-form-field appearance="outline" class="name-field">
+      <mat-label>Namn</mat-label>
+      <input matInput
+             [(ngModel)]="title"
+             (keydown.enter)="create()"
+             autocomplete="off"
+             autofocus
+             [placeholder]="isCounter ? 'T.ex. Kafferäknare, Lagermöte…' : 'T.ex. Packlista, Veckans uppgifter…'" />
+    </mat-form-field>
+
+    <button mat-flat-button color="primary" class="create-btn"
+            [disabled]="!title.trim() || creating"
+            (click)="create()">
+      {{ isCounter ? 'Skapa räknare' : 'Skapa checklista' }}
+    </button>
+  </div>
+</div>

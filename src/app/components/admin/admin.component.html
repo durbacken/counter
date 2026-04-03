@@ -27,7 +27,7 @@
   <section class="section">
     <h2 class="section-title">Titel</h2>
     <mat-form-field appearance="outline" class="full-width">
-      <mat-label>Arbetsytans namn</mat-label>
+      <mat-label>Namn</mat-label>
       <input matInput [(ngModel)]="titleInput"
              (blur)="saveTitle()" (keydown.enter)="saveTitle()"
              autocomplete="off" />
@@ -50,12 +50,12 @@
 
   <mat-divider />
 
-  <!-- ─── Kategorier ────────────────────────────── -->
+  <!-- ─── Punkter ─────────────────────────────── -->
   <section class="section">
-    <h2 class="section-title">Kategorier</h2>
+    <h2 class="section-title">Punkter</h2>
 
     @if (workspace.categories.length === 0) {
-      <p class="no-items">Inga kategorier än. Lägg till nedan.</p>
+      <p class="no-items">Inga punkter än. Lägg till nedan.</p>
     }
 
     <div cdkDropList (cdkDropListDropped)="dropCategory($event)" class="drag-list">
@@ -88,7 +88,7 @@
 
     <div class="add-row">
       <mat-form-field appearance="outline" class="add-field">
-        <mat-label>Ny kategori</mat-label>
+        <mat-label>Ny punkt</mat-label>
         <input matInput [(ngModel)]="newCategoryName"
                (keydown.enter)="addCategory()"
                placeholder="Skriv namn..." autocomplete="off" />
@@ -117,7 +117,7 @@
       <mat-checkbox
         [checked]="workspace.enableHistory ?? false"
         (change)="toggleSetting('enableHistory', $event.checked)">
-        Historik – visa ändringslogg i arbetsytan
+        Historik – visa ändringslogg
       </mat-checkbox>
       <mat-checkbox
         [checked]="workspace.enableComments ?? false"
@@ -133,7 +133,7 @@
   <!-- ─── Delad länk ───────────────────────────── -->
   <section class="section">
     <h2 class="section-title">Delad länk</h2>
-    <p class="hint">Låter vem som helst med länken se arbetsytan utan att logga in.</p>
+    <p class="hint">Låter vem som helst med länken se detta utan att logga in.</p>
     <mat-checkbox
       [checked]="workspace.isPublic ?? false"
       (change)="togglePublic($event.checked)">
@@ -216,13 +216,13 @@
       @if (!workspace.archived) {
         <button mat-stroked-button color="warn" (click)="confirmArchiveWorkspace()">
           <mat-icon>archive</mat-icon>
-          Arkivera arbetsyta
+          {{ (workspace.mode ?? 'counter') === 'checkbox' ? 'Arkivera checklistan' : 'Arkivera räknaren' }}
         </button>
       } @else {
         <div class="danger-actions">
           <button mat-stroked-button (click)="unarchiveWorkspace()">
             <mat-icon>unarchive</mat-icon>
-            Återställ arbetsyta
+            {{ (workspace.mode ?? 'counter') === 'checkbox' ? 'Återställ checklistan' : 'Återställ räknaren' }}
           </button>
           <button mat-stroked-button color="warn" (click)="confirmDeleteWorkspace()">
             <mat-icon>delete_forever</mat-icon>

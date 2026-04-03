@@ -3,13 +3,10 @@ import { AsyncPipe } from '@angular/common';
 import { Router } from '@angular/router';
 import { firstValueFrom, of } from 'rxjs';
 import { catchError, filter, switchMap } from 'rxjs/operators';
-import { FormsModule } from '@angular/forms';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatCardModule } from '@angular/material/card';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
 import { MatDialog } from '@angular/material/dialog';
 import { AuthService } from '../../services/auth.service';
 import { WorkspaceService } from '../../services/workspace.service';
@@ -22,13 +19,10 @@ import { Category, Workspace, WorkspaceMode } from '../../models/counter.model';
   selector: 'app-workspace-list',
   imports: [
     AsyncPipe,
-    FormsModule,
     MatToolbarModule,
     MatButtonModule,
     MatIconModule,
     MatCardModule,
-    MatFormFieldModule,
-    MatInputModule,
     FooterComponent,
   ],
   templateUrl: './workspace-list.component.html',
@@ -50,20 +44,19 @@ export class WorkspaceListComponent implements OnInit, OnDestroy {
 
   installPrompt: any = null;
   showIosHint = false;
+  featureHintVisible = false;
+  private featureHintTimer: ReturnType<typeof setTimeout> | null = null;
+
+  onFeatureCardClick(): void {
+    if (this.featureHintTimer) clearTimeout(this.featureHintTimer);
+    this.featureHintVisible = true;
+    this.featureHintTimer = setTimeout(() => { this.featureHintVisible = false; }, 2500);
+  }
   private readonly onBeforeInstall = (e: Event) => {
     e.preventDefault();
     this.installPrompt = e;
   };
 
-  newWorkspaceTitle = '';
-  newWorkspaceNotes = '';
-  newWorkspaceMode: WorkspaceMode = 'counter';
-  showNewForm = false;
-
-  startNew(mode: WorkspaceMode): void {
-    this.newWorkspaceMode = mode;
-    this.showNewForm = true;
-  }
   showExamplePicker = false;
   showArchived = false;
 
@@ -81,6 +74,7 @@ export class WorkspaceListComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     window.removeEventListener('beforeinstallprompt', this.onBeforeInstall);
+    if (this.featureHintTimer) clearTimeout(this.featureHintTimer);
   }
 
   dismissIosHint(): void {
@@ -95,6 +89,10 @@ export class WorkspaceListComponent implements OnInit, OnDestroy {
     this.installPrompt = null;
   }
 
+  startNew(mode: WorkspaceMode): void {
+    this.router.navigate(['/new', mode]);
+  }
+
   // ── Swipe-to-reveal state ──────────────────────────────
   swipedId: string | null = null;
   private touchStartX = 0;
@@ -102,7 +100,7 @@ export class WorkspaceListComponent implements OnInit, OnDestroy {
 
   onTouchStart(event: TouchEvent, id: string): void {
     if (this.swipedId && this.swipedId !== id) {
-      this.swipedId = null; // close any other open card
+      this.swipedId = null;
     }
     this.touchStartX = event.touches[0].clientX;
     this.touchStartY = event.touches[0].clientY;
@@ -111,42 +109,20 @@ export class WorkspaceListComponent implements OnInit, OnDestroy {
   onTouchEnd(event: TouchEvent, id: string): void {
     const dx = event.changedTouches[0].clientX - this.touchStartX;
     const dy = event.changedTouches[0].clientY - this.touchStartY;
-
-    // Only act on clearly horizontal swipes
     if (Math.abs(dx) < Math.abs(dy)) return;
-
     if (dx < -60) {
-      this.swipedId = id; // reveal action
+      this.swipedId = id;
     } else if (dx > 20 && this.swipedId === id) {
-      this.swipedId = null; // swipe right to close
+      this.swipedId = null;
     }
   }
 
   onCardClick(ws: Workspace): void {
     if (this.swipedId === ws.id) {
-      this.swipedId = null; // tapping swiped card closes it
+      this.swipedId = null;
       return;
     }
-    this.open(ws);
-  }
-
-  // ── Actions ───────────────────────────────────────────
-  open(workspace: Workspace): void {
-    this.router.navigate(['/workspace', workspace.id]);
-  }
-
-  async createWorkspace(): Promise<void> {
-    const title = this.newWorkspaceTitle.trim();
-    if (!title) return;
-    const user = await firstValueFrom(this.user$);
-    const id = await this.workspaceService.createWorkspace(
-      title, user!.uid, user!.email!, this.newWorkspaceMode, this.newWorkspaceNotes.trim() || undefined
-    );
-    this.newWorkspaceTitle = '';
-    this.newWorkspaceNotes = '';
-    this.newWorkspaceMode = 'counter';
-    this.showNewForm = false;
-    this.router.navigate(['/workspace', id]);
+    this.router.navigate(['/workspace', ws.id]);
   }
 
   confirmAction(ws: Workspace, uid: string): void {
@@ -154,7 +130,7 @@ export class WorkspaceListComponent implements OnInit, OnDestroy {
     if (this.isOwner(ws, uid)) {
       this.dialog.open(ConfirmDialogComponent, {
         data: {
-          title: 'Arkivera arbetsyta',
+          title: 'Arkivera',
           message: `Vill du arkivera "${ws.title}"? Du kan återställa den i inställningarna.`
         }
       }).afterClosed().subscribe(async confirmed => {
@@ -162,7 +138,7 @@ export class WorkspaceListComponent implements OnInit, OnDestroy {
       });
     } else {
       this.dialog.open(ConfirmDialogComponent, {
-        data: { title: 'Lämna arbetsyta', message: `Vill du lämna "${ws.title}"?` }
+        data: { title: 'Lämna', message: `Vill du lämna "${ws.title}"?` }
       }).afterClosed().subscribe(async confirmed => {
         if (confirmed) await this.workspaceService.removeMember(ws.id, uid, ws.members, ws.memberEmails);
       });

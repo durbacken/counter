@@ -181,7 +181,7 @@ export class AdminComponent implements OnInit {
     const duplicate = this.workspace.categories.some(
       c => c.name.toLowerCase() === name.toLowerCase() && c.id !== this.editingId
     );
-    if (duplicate) { this.showError('Det finns redan en kategori med det namnet.'); return; }
+    if (duplicate) { this.showError('Det finns redan en punkt med det namnet.'); return; }
     const updated = this.workspace.categories.map(c =>
       c.id === this.editingId ? { ...c, name } : c
     );
@@ -198,7 +198,7 @@ export class AdminComponent implements OnInit {
     const duplicate = this.workspace.categories.some(
       c => c.name.toLowerCase() === name.toLowerCase()
     );
-    if (duplicate) { this.showError('Det finns redan en kategori med det namnet.'); return; }
+    if (duplicate) { this.showError('Det finns redan en punkt med det namnet.'); return; }
     const newCategory: Category = { id: crypto.randomUUID(), name, count: 0 };
     this.workspaceService.updateCategories(this.workspaceId, [...this.workspace.categories, newCategory]);
     this.newCategoryName = '';
@@ -206,7 +206,7 @@ export class AdminComponent implements OnInit {
 
   confirmDeleteCategory(category: Category): void {
     this.dialog.open(ConfirmDialogComponent, {
-      data: { title: 'Ta bort kategori', message: `Vill du ta bort "${category.name}"?` }
+      data: { title: 'Ta bort punkt', message: `Vill du ta bort "${category.name}"?` }
     }).afterClosed().subscribe(confirmed => {
       if (confirmed && this.workspace) {
         const updated = this.workspace.categories.filter(c => c.id !== category.id);
@@ -239,7 +239,7 @@ export class AdminComponent implements OnInit {
     if (!this.workspace) return;
     const email = this.workspace.memberEmails[uid] ?? uid;
     this.dialog.open(ConfirmDialogComponent, {
-      data: { title: 'Ta bort medlem', message: `Ta bort ${email} från arbetsytan?` }
+      data: { title: 'Ta bort medlem', message: `Ta bort ${email} från den här listan?` }
     }).afterClosed().subscribe(confirmed => {
       if (confirmed && this.workspace) {
         this.workspaceService.removeMember(
@@ -252,8 +252,8 @@ export class AdminComponent implements OnInit {
   confirmArchiveWorkspace(): void {
     this.dialog.open(ConfirmDialogComponent, {
       data: {
-        title: 'Arkivera arbetsyta',
-        message: `Vill du arkivera "${this.workspace?.title}"? Arbetsytan döljs men kan återställas.`
+        title: 'Arkivera',
+        message: `Vill du arkivera "${this.workspace?.title}"? Den döljs men kan återställas.`
       }
     }).afterClosed().subscribe(async confirmed => {
       if (confirmed) {

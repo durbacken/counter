@@ -23,6 +23,14 @@ export class LoginComponent implements OnInit {
 
   loading = false;
   error = '';
+  featureHintVisible = false;
+  private featureHintTimer: ReturnType<typeof setTimeout> | null = null;
+
+  onFeatureCardClick(): void {
+    if (this.featureHintTimer) clearTimeout(this.featureHintTimer);
+    this.featureHintVisible = true;
+    this.featureHintTimer = setTimeout(() => { this.featureHintVisible = false; }, 2500);
+  }
 
   // Magic link states
   emailInput = '';
