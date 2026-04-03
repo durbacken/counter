@@ -207,7 +207,8 @@ export class MainComponent {
         workspace,
         workspaceId: this.workspaceId,
         currentUserEmail: user?.email ?? '',
-        isOwner: workspace.ownerId === user?.uid,
+        canManage: workspace.ownerId === user?.uid ||
+                   (workspace.admins ?? []).includes(user?.uid ?? ''),
       },
       width: '380px',
       maxWidth: '95vw',

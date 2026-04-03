@@ -16,7 +16,7 @@ interface ShareDialogData {
   workspace: Workspace;
   workspaceId: string;
   currentUserEmail: string;
-  isOwner: boolean;
+  canManage: boolean;
 }
 
 @Component({
@@ -38,7 +38,7 @@ interface ShareDialogData {
       <!-- ─── Delad länk ─────────────────────────────── -->
       <div class="share-section">
         <p class="section-label">Delad länk</p>
-        @if (data.isOwner) {
+        @if (data.canManage) {
           <mat-slide-toggle [checked]="isPublic" (change)="togglePublic()">
             Aktivera delningslänk
           </mat-slide-toggle>
@@ -54,39 +54,37 @@ interface ShareDialogData {
             <mat-icon class="hint-icon">info</mat-icon>
             Vem som helst med länken kan se denna arbetsyta utan att logga in.
           </p>
-        } @else if (!data.isOwner) {
+        } @else if (!data.canManage) {
           <p class="link-hint muted">Ägaren har inte aktiverat delningslänk för denna arbetsyta.</p>
         }
       </div>
 
-      @if (data.isOwner) {
-        <mat-divider />
+      <mat-divider />
 
-        <!-- ─── Bjud in ────────────────────────────────── -->
-        <div class="share-section">
-          <p class="section-label">Bjud in via e-post</p>
-          <div class="invite-row">
-            <mat-form-field appearance="outline" class="invite-field">
-              <mat-label>E-postadress</mat-label>
-              <input matInput [(ngModel)]="inviteEmail"
-                     type="email"
-                     (keydown.enter)="inviteMember()"
-                     placeholder="namn&#64;exempel.se"
-                     autocomplete="off" />
-            </mat-form-field>
-            <button mat-flat-button color="primary" class="invite-btn"
-                    [disabled]="!inviteEmail.trim() || inviting"
-                    (click)="inviteMember()">
-              <mat-icon>person_add</mat-icon>
-              Bjud in
-            </button>
-          </div>
-          <p class="link-hint muted">
-            <mat-icon class="hint-icon">group</mat-icon>
-            Inbjudna medlemmar loggar in och kan delta aktivt — räkna, bocka av och se historik. Skiljer sig från delningslänken där besökare bara kan läsa.
-          </p>
+      <!-- ─── Bjud in ────────────────────────────────── -->
+      <div class="share-section">
+        <p class="section-label">Bjud in via e-post</p>
+        <div class="invite-row">
+          <mat-form-field appearance="outline" class="invite-field">
+            <mat-label>E-postadress</mat-label>
+            <input matInput [(ngModel)]="inviteEmail"
+                   type="email"
+                   (keydown.enter)="inviteMember()"
+                   placeholder="namn&#64;exempel.se"
+                   autocomplete="off" />
+          </mat-form-field>
+          <button mat-flat-button color="primary" class="invite-btn"
+                  [disabled]="!inviteEmail.trim() || inviting"
+                  (click)="inviteMember()">
+            <mat-icon>person_add</mat-icon>
+            Bjud in
+          </button>
         </div>
-      }
+        <p class="link-hint muted">
+          <mat-icon class="hint-icon">group</mat-icon>
+          Inbjudna kan logga in och delta aktivt — räkna, bocka av och se historik. Till skillnad från delningslänken som bara ger läsåtkomst utan inloggning.
+        </p>
+      </div>
 
     </mat-dialog-content>
     <mat-dialog-actions align="end">
