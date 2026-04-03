@@ -149,11 +149,21 @@ export class AdminComponent implements OnInit {
     this.router.navigate(['/workspace', this.workspaceId]);
   }
 
-  async duplicateWorkspace(): Promise<void> {
+  duplicateWorkspace(): void {
     if (!this.workspace) return;
-    const email = this.workspace.memberEmails[this.currentUserId] ?? '';
-    const newId = await this.workspaceService.duplicateWorkspace(this.workspace, this.currentUserId, email);
-    this.router.navigate(['/workspace', newId]);
+    this.dialog.open(ConfirmDialogComponent, {
+      data: {
+        title: 'Duplicera',
+        message: `Skapar en kopia av "${this.workspace.title}" med samma punkter men alla värden nollställda. Du blir ägare av kopian.`,
+        confirmText: 'Duplicera',
+        confirmColor: 'primary',
+      }
+    }).afterClosed().subscribe(async confirmed => {
+      if (!confirmed || !this.workspace) return;
+      const email = this.workspace.memberEmails[this.currentUserId] ?? '';
+      const newId = await this.workspaceService.duplicateWorkspace(this.workspace, this.currentUserId, email);
+      this.router.navigate(['/workspace', newId]);
+    });
   }
 
   saveTitle(): void {

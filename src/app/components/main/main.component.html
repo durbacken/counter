@@ -1,44 +1,47 @@
 @if (workspace$ | async; as workspace) {
+  @let changes = (changes$ | async) ?? [];
   <mat-toolbar color="primary" class="toolbar">
     <button mat-icon-button (click)="goBack()" aria-label="Tillbaka">
       <mat-icon>arrow_back</mat-icon>
     </button>
+    <div class="ws-avatar" [style.background]="wsColor(workspace.id)">
+      {{ workspace.title.charAt(0).toUpperCase() }}
+    </div>
     <span class="toolbar-title">{{ workspace.title }}</span>
-    <span class="spacer"></span>
     <button mat-icon-button (click)="openShareDialog(workspace)" aria-label="Dela">
       <mat-icon>share</mat-icon>
     </button>
-    @if (hasValues(workspace)) {
+    @let canSettings = canAccessSettings$ | async;
+    @if (hasValues(workspace) || canSettings) {
       <button mat-icon-button [matMenuTriggerFor]="overflowMenu" aria-label="Mer">
         <mat-icon>more_vert</mat-icon>
       </button>
       <mat-menu #overflowMenu="matMenu">
-        <button mat-menu-item (click)="confirmReset()">
-          <mat-icon>restart_alt</mat-icon>
-          Nollställ
-        </button>
-        <mat-divider />
-        @if (workspace.enableHistory) {
+        @if (hasValues(workspace)) {
+          <button mat-menu-item (click)="confirmReset()">
+            <mat-icon>restart_alt</mat-icon>
+            Nollställ
+          </button>
+          <mat-divider />
           <button mat-menu-item (click)="exportPng()">
             <mat-icon>image</mat-icon>
             Exportera bild (PNG)
           </button>
-          <button mat-menu-item (click)="exportXls()">
-            <mat-icon>table_chart</mat-icon>
-            Exportera historik (XLS)
-          </button>
-        } @else {
-          <button mat-menu-item (click)="exportPng()">
-            <mat-icon>image</mat-icon>
-            Exportera bild (PNG)
+          @if (workspace.enableHistory) {
+            <button mat-menu-item (click)="exportXls()">
+              <mat-icon>table_chart</mat-icon>
+              Exportera historik (XLS)
+            </button>
+          }
+          @if (canSettings) { <mat-divider /> }
+        }
+        @if (canSettings) {
+          <button mat-menu-item (click)="goToAdmin()">
+            <mat-icon>settings</mat-icon>
+            Inställningar
           </button>
         }
       </mat-menu>
-    }
-    @if (canAccessSettings$ | async) {
-      <button mat-icon-button (click)="goToAdmin()" aria-label="Inställningar">
-        <mat-icon>settings</mat-icon>
-      </button>
     }
   </mat-toolbar>
 
@@ -88,7 +91,13 @@
                     </button>
                   </div>
                 } @else {
-                  <span class="category-name">{{ category.name }}</span>
+                  <div class="category-info">
+                    <span class="category-name">{{ category.name }}</span>
+                    @let lc = lastChangeFor(category.id, changes);
+                    @if (lc) {
+                      <span class="last-change">{{ shortEmail(lc.userEmail) }} · {{ timeAgo(lc.timestamp) }}</span>
+                    }
+                  </div>
                   <div class="controls">
                     <button mat-mini-fab
                             class="btn-decrement"
@@ -158,12 +167,18 @@
                     </button>
                   </div>
                 } @else {
-                  <mat-checkbox
-                    [checked]="category.checked ?? false"
-                    (change)="toggleCheck(category)"
-                    class="category-checkbox">
-                    {{ category.name }}
-                  </mat-checkbox>
+                  <div class="category-info">
+                    <mat-checkbox
+                      [checked]="category.checked ?? false"
+                      (change)="toggleCheck(category)"
+                      class="category-checkbox">
+                      {{ category.name }}
+                    </mat-checkbox>
+                    @let lc = lastChangeFor(category.id, changes);
+                    @if (lc) {
+                      <span class="last-change checkbox-last-change">{{ shortEmail(lc.userEmail) }} · {{ timeAgo(lc.timestamp) }}</span>
+                    }
+                  </div>
                 }
               </div>
               @if (!last) { <mat-divider /> }
@@ -342,5 +357,22 @@
 
   </div>
   <app-footer />
+  </div>
+} @else {
+  <mat-toolbar color="primary" class="toolbar">
+    <div class="sk sk-icon"></div>
+    <div class="sk sk-ws-avatar"></div>
+    <div class="sk sk-toolbar-title"></div>
+  </mat-toolbar>
+  <div class="container">
+    <div class="skeleton-list">
+      @for (i of [1,2,3,4]; track i) {
+        <div class="skeleton-row">
+          <div class="sk sk-row-name"></div>
+          <div class="sk sk-row-controls"></div>
+        </div>
+        <mat-divider />
+      }
+    </div>
   </div>
 }

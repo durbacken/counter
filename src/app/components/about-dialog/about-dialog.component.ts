@@ -15,7 +15,7 @@ import { MatIconModule } from '@angular/material/icon';
 
       <p class="intro">
         Hej! Jag heter <strong>Tobias Sjöbeck</strong> och det är jag som
-        har byggt <strong>Koll på läget?</strong> som ett litet hobbyprojekt på fritiden.
+        har byggt <strong>Koll på läget?</strong> som ett litet trevligt hobbyprojekt på fritiden.
       </p>
 
       <p>

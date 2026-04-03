@@ -103,12 +103,6 @@
       </button>
     </div>
 
-    @if (workspace.categories.length > 0) {
-      <button mat-flat-button color="primary" class="done-btn" (click)="goBack()">
-        <mat-icon>check</mat-icon>
-        Klar
-      </button>
-    }
   </section>
 
   <mat-divider />
@@ -258,5 +252,12 @@
   }
 
   <app-footer />
+</div>
+
+<div class="done-bar">
+  <button mat-flat-button color="primary" class="done-btn" (click)="goBack()">
+    <mat-icon>check</mat-icon>
+    Klar
+  </button>
 </div>
 }

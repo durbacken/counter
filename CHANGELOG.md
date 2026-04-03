@@ -1,5 +1,37 @@
 # Changelog
 
+## 2026-04-03
+
+### Added
+- **Last changed by** on workspace view: a subtle "Anna · 3 min sedan" line under each category name in normal view (not edit mode), showing who last changed that category and when
+- **Last changed by** on workspace list cards: `lastActivityBy` and `lastActivityAt` fields stamped on the workspace document on every `logChange` call — no extra Firestore reads needed
+- **Per-workspace color avatar**: deterministic color (derived from workspace ID) + first letter of title shown as a rounded avatar on workspace list cards and inside the workspace toolbar
+- **Guest mode**: anonymous Firebase Auth sign-in via "Prova utan att logga in" button on login page; guest users see an amber warning banner explaining their data is temporary; "Skapa konto" signs them out to the login screen; anonymous users display as "Gäst" in change history
+- **Offline indicator**: fixed banner that slides up from the bottom when the device loses connectivity and slides away when it reconnects; respects iOS safe-area inset
+- **Skeleton loaders**: shimmer placeholder cards shown on the workspace list while `workspaces$` loads, and a skeleton toolbar + category rows on the workspace view while `workspace$` loads; uses existing CSS variables so dark mode works automatically
+- **Haptic feedback**: `navigator.vibrate(10)` on counter increment, decrement, and checkbox toggle for a tactile feel on Android (silently ignored on iOS and desktop via optional chaining)
+- **Duplicate workspace**: swipe action for owners on workspace list cards + toolbar button in settings; confirms with a dialog explaining the copy gets zeroed values; navigates to the new workspace on creation
+- **Drag-to-reorder categories** from the main workspace view (in edit mode) using Angular CDK drag-and-drop — previously only available in settings
+- **Reset individual category** (counter mode, edit mode only): reset button on each row, confirm dialog, undo via snackbar
+- **Undo snackbar** improvements: 8 s duration, live countdown display, dedicated dismiss (✕) button, slim height using plain `<button>` elements instead of Material buttons
+- **History section in settings**: always-visible collapsible change log in the settings page, even when the history feature flag is off — shows total change count in the toggle button
+- **Inline add-categories panel** on empty workspace: clicking the step-1 card opens a multi-field input panel; Enter moves between fields; steps 2 & 3 are hidden while the panel is open
+- **Feature card click hints** on login and workspace list pages: clicking a feature card briefly shows an arrow pointing to the sign-in / action buttons
+- **"Klar" button** now sticky at the bottom of the settings page — always visible regardless of scroll position
+
+### Changed
+- Settings gear icon moved into the `more_vert` overflow menu to reduce toolbar clutter; menu always visible when user has settings access or there are values
+- Workspace toolbar title now truncates with ellipsis rather than pushing action buttons off screen
+- Checklist mode consistently listed before counter mode in all button groups across all views
+- "Prova ett exempel" picker on empty workspace hides steps 2 & 3 while add panel is open
+- About page back button now uses `Location.back()` instead of hardcoded navigate to `/`, so returning from "Se mer" lands on the page you came from
+- Terminology simplified: "arbetsyta" → contextual plain language throughout; "kategorier" → "punkter"
+
+### Fixed
+- Long workspace names in the main toolbar no longer push share/settings buttons off screen
+
+---
+
 ## 2026-04-02
 
 ### Added

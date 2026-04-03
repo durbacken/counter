@@ -5,6 +5,8 @@ import { MatButtonModule } from '@angular/material/button';
 export interface ConfirmDialogData {
   title: string;
   message: string;
+  confirmText?: string;
+  confirmColor?: 'warn' | 'primary';
 }
 
 @Component({
@@ -15,7 +17,7 @@ export interface ConfirmDialogData {
     <mat-dialog-content>{{ data.message }}</mat-dialog-content>
     <mat-dialog-actions align="end">
       <button mat-button (click)="ref.close(false)">Avbryt</button>
-      <button mat-flat-button color="warn" (click)="ref.close(true)">Bekräfta</button>
+      <button mat-flat-button [color]="data.confirmColor ?? 'warn'" (click)="ref.close(true)">{{ data.confirmText ?? 'Bekräfta' }}</button>
     </mat-dialog-actions>
   `
 })

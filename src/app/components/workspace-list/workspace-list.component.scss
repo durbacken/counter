@@ -44,6 +44,31 @@
   margin: 0 0 16px;
 }
 
+/* ─── Guest banner ───────────────────────────────────── */
+.guest-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #fff8e1;
+  color: #5d4037;
+  font-size: 13px;
+  padding: 10px 16px;
+  border-bottom: 1px solid #ffe082;
+
+  mat-icon { font-size: 18px; width: 18px; height: 18px; flex-shrink: 0; color: #f9a825; }
+  span { flex: 1; }
+  button { flex-shrink: 0; }
+}
+
+@media (prefers-color-scheme: dark) {
+  .guest-banner {
+    background: #3e2f00;
+    color: #ffe082;
+    border-bottom-color: #5d4037;
+    mat-icon { color: #ffd54f; }
+  }
+}
+
 /* ─── Install banner ─────────────────────────────────── */
 .install-banner {
   display: flex;
@@ -64,6 +89,42 @@
   .install-icon { color: #1976d2; flex-shrink: 0; }
   span { flex: 1; }
   button { flex-shrink: 0; }
+}
+
+/* ─── Skeleton loaders ───────────────────────────────── */
+@keyframes shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.sk {
+  background: linear-gradient(90deg, var(--surface-variant) 25%, var(--divider) 50%, var(--surface-variant) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
+  border-radius: 6px;
+}
+
+.skeleton-card {
+  background: var(--surface);
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+  padding: 16px;
+}
+
+.skeleton-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+  .sk-avatar  { width: 38px; height: 38px; border-radius: 10px; flex-shrink: 0; }
+  .sk-title   { flex: 1; height: 16px; }
+  .sk-badge   { width: 44px; height: 18px; border-radius: 10px; flex-shrink: 0; }
+}
+
+.skeleton-meta {
+  display: flex;
+  gap: 16px;
+  .sk-meta { width: 80px; height: 12px; }
 }
 
 /* ─── Workspace list ─────────────────────────────────── */
@@ -132,10 +193,24 @@
 .ws-header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  gap: 12px;
   margin-bottom: 8px;
 
-  .ws-title { font-size: 17px; font-weight: 500; }
+  .ws-title { flex: 1; font-size: 17px; font-weight: 500; min-width: 0; }
+}
+
+.ws-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  font-weight: 700;
+  color: #fff;
+  flex-shrink: 0;
+  letter-spacing: -0.5px;
 }
 
 .owner-badge, .shared-badge {
@@ -164,6 +239,13 @@
   span { display: flex; align-items: center; gap: 4px; }
 
   .meta-icon { font-size: 16px; width: 16px; height: 16px; }
+}
+
+.ws-activity {
+  font-size: 11px;
+  color: var(--text-secondary);
+  opacity: 0.7;
+  margin: 6px 0 0;
 }
 
 .ws-notes {

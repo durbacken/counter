@@ -214,6 +214,7 @@ export class MainComponent {
   // ─── Counter / checkbox actions ─────────────────────────
 
   async increment(category: Category): Promise<void> {
+    navigator.vibrate?.(10);
     const prev = category.count;
     const next = prev + 1;
     await this.workspaceService.increment(this.workspaceId, category.id);
@@ -223,6 +224,7 @@ export class MainComponent {
 
   async decrement(category: Category): Promise<void> {
     if (category.count === 0) return;
+    navigator.vibrate?.(10);
     const prev = category.count;
     const next = Math.max(0, prev - 1);
     await this.workspaceService.decrement(this.workspaceId, category.id);
@@ -249,6 +251,7 @@ export class MainComponent {
   }
 
   async toggleCheck(category: Category): Promise<void> {
+    navigator.vibrate?.(10);
     const willBeChecked = !(category.checked ?? false);
     await this.workspaceService.toggleCheck(this.workspaceId, category.id);
     await this.promptAndLog(
@@ -379,12 +382,45 @@ export class MainComponent {
         previousValue,
         newValue,
         userId: user.uid,
-        userEmail: user.email ?? '',
+        userEmail: user.email ?? (user.isAnonymous ? 'Gäst' : ''),
         ...(comment ? { comment } : {}),
       });
     } catch (e) {
       console.error('logChange failed:', e);
     }
+  }
+
+  private readonly WS_COLORS = [
+    '#1976d2', '#00897b', '#43a047', '#fb8c00',
+    '#e53935', '#8e24aa', '#00acc1', '#f4511e',
+    '#5e35b1', '#6d4c41',
+  ];
+
+  wsColor(id: string): string {
+    const hash = [...id].reduce((acc, c) => acc + c.charCodeAt(0), 0);
+    return this.WS_COLORS[hash % this.WS_COLORS.length];
+  }
+
+  lastChangeFor(categoryId: string, changes: ChangeEvent[]): ChangeEvent | null {
+    return changes.find(c => c.categoryId === categoryId) ?? null;
+  }
+
+  timeAgo(timestamp: any): string {
+    if (!timestamp) return '';
+    const date: Date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+    const seconds = Math.floor((Date.now() - date.getTime()) / 1000);
+    if (seconds < 60) return 'just nu';
+    const minutes = Math.floor(seconds / 60);
+    if (minutes < 60) return `${minutes} min sedan`;
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `${hours} h sedan`;
+    const days = Math.floor(hours / 24);
+    if (days === 1) return 'igår';
+    return `${days} dagar sedan`;
+  }
+
+  shortEmail(email: string): string {
+    return email.split('@')[0];
   }
 
   async loadExample(workspace: Workspace): Promise<void> {

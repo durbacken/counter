@@ -1,19 +1,28 @@
-# Counter
+# Koll på läget?
 
-A Progressive Web App (PWA) for shared real-time counting across multiple people. Built for family use — create a workspace, add categories, and let everyone count together from their own device.
-
-The app UI is in Swedish.
+A Progressive Web App (PWA) for shared real-time counting and checklists. Create a workspace, add categories, and let everyone update together from their own device. The app UI is in Swedish.
 
 ## What it does
 
-- Sign in with Google
-- Create named **workspaces** (e.g. "Family Counter")
-- Add **categories** to count (e.g. "Red cars", "Blue birds")
-- Increment or decrement each category — updates instantly for everyone sharing the workspace
-- Invite family members by email to join a workspace
-- View a horizontal bar chart of all counts
-- Export/share the chart as a PNG image
-- Install as a PWA on iPhone or Android (works like a native app)
+- **Two modes**: counter (increment/decrement with +/−) or checklist (tick off items with progress %)
+- Sign in with Google or magic email link — or try as a guest without signing in
+- Create named workspaces, invite members by email, share a read-only public link
+- Invite flow: existing users added immediately; new users get a pending invite processed on first sign-in
+- Per-workspace color avatar (deterministic from ID) for quick visual identification
+- Change history: every action logged with timestamp, user, and optional comment; exportable as Excel
+- "Last changed by" shown under each category and on each workspace list card
+- Drag-to-reorder categories directly from the main view (edit mode)
+- Reset individual categories or all at once, with undo snackbar (8 s countdown)
+- Duplicate a workspace (same structure, zeroed values)
+- Archive workspaces instead of deleting; restore or permanently delete from the archived section
+- Admin role: owner can promote members to co-admin
+- Public share link: anyone with the link can view without signing in
+- Workspace notes: shown on the list card and inside the view; included in exports
+- Export as PNG image or Excel (.xlsx) with full change history
+- Offline indicator banner when the device loses connectivity
+- Skeleton loaders while Firestore data loads
+- Haptic feedback on counter/checkbox interactions (Android)
+- Install as a PWA on iPhone or Android — works like a native app, auto-updates in the background
 
 ---
 
@@ -32,8 +41,8 @@ The app UI is in Swedish.
 
 | What | Why |
 |------|-----|
-| **Firebase Auth** | Google Sign-in — no passwords to manage |
-| **Cloud Firestore** | Real-time database — all count changes sync instantly across devices |
+| **Firebase Auth** | Google Sign-in, magic email link, anonymous guest sign-in |
+| **Cloud Firestore** | Real-time database — all changes sync instantly across devices |
 
 ### Hosting & CI/CD
 
@@ -50,13 +59,20 @@ The app UI is in Swedish.
 src/
   app/
     components/
-      login/              # Google Sign-in screen
-      workspace-list/     # Home screen — list and create workspaces
-      main/               # Counter screen — increment/decrement/chart/export
-      admin/              # Settings — categories, members, invite, delete workspace
+      login/              # Sign-in screen (Google, magic link, guest)
+      workspace-list/     # Home screen — list, create, archive workspaces
+      main/               # Workspace view — counter/checkbox, edit, export
+      admin/              # Settings — categories, members, invite, feature flags
       chart/              # Chart.js horizontal bar chart component
-      install-banner/     # PWA install prompt (iOS instructions / Android native)
+      about-dialog/       # About / credits dialog
+      about-page/         # Full about page (linked from dialog)
+      change-history/     # Per-category change log accordion
+      comment-dialog/     # Optional comment prompt after each change
       confirm-dialog/     # Reusable confirmation dialog
+      share-dialog/       # Invite members + public link management
+      workspace-view/     # Public read-only view (no sign-in required)
+      install-banner/     # PWA install prompt (iOS instructions / Android native)
+      footer/             # Shared footer component
     guards/
       auth.guard.ts       # Redirects unauthenticated users to /login
     models/
@@ -73,21 +89,28 @@ src/
 
 ```
 /users/{uid}
-  email: string
-  displayName: string
-  photoURL: string
+  email, displayName, photoURL
 
 /workspaces/{workspaceId}
-  title: string
-  ownerId: string
-  members: string[]             // list of uids
-  memberEmails: { uid: email }  // cached for display
-  categories: [
-    { id: string, name: string, count: number }
-  ]
+  title, ownerId, mode ('counter'|'checkbox')
+  members: string[]               // uids
+  memberEmails: { uid: email }    // cached for display
+  admins?: string[]               // uids with co-admin rights
+  categories: [{ id, name, count, checked? }]
+  notes?: string
+  archived?: boolean
+  isPublic?: boolean
+  enableHistory?: boolean
+  enableComments?: boolean
+  lastActivityAt?: Timestamp      // stamped on every logChange
+  lastActivityBy?: string         // email of last actor
+
+  /changes/{changeId}             // subcollection
+    categoryId, categoryName, changeType, previousValue, newValue
+    userId, userEmail, timestamp, comment?
 ```
 
-Increment and decrement use **Firestore transactions** to prevent lost updates when multiple people count at the same time.
+Increment/decrement/toggle use **Firestore transactions** to prevent lost updates under concurrent edits.
 
 ---
 

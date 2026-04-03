@@ -186,5 +186,9 @@ export class DevWorkspaceService {
     };
     ch[workspaceId] = [entry, ...(ch[workspaceId] ?? [])];
     this.saveCh(ch);
+    this.patchWorkspace(workspaceId, {
+      lastActivityAt: new Date().toISOString() as any,
+      lastActivityBy: event.userEmail,
+    });
   }
 }

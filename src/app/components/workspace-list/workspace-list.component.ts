@@ -93,10 +93,20 @@ export class WorkspaceListComponent implements OnInit, OnDestroy {
     this.router.navigate(['/new', mode]);
   }
 
-  async duplicateWorkspace(ws: Workspace, user: { uid: string; email: string | null }): Promise<void> {
+  duplicateWorkspace(ws: Workspace, user: { uid: string; email: string | null }): void {
     this.swipedId = null;
-    const newId = await this.workspaceService.duplicateWorkspace(ws, user.uid, user.email ?? '');
-    this.router.navigate(['/workspace', newId]);
+    this.dialog.open(ConfirmDialogComponent, {
+      data: {
+        title: 'Duplicera',
+        message: `Skapar en kopia av "${ws.title}" med samma punkter men alla värden nollställda. Du blir ägare av kopian.`,
+        confirmText: 'Duplicera',
+        confirmColor: 'primary',
+      }
+    }).afterClosed().subscribe(async confirmed => {
+      if (!confirmed) return;
+      const newId = await this.workspaceService.duplicateWorkspace(ws, user.uid, user.email ?? '');
+      this.router.navigate(['/workspace', newId]);
+    });
   }
 
   // ── Swipe-to-reveal state ──────────────────────────────
@@ -173,6 +183,35 @@ export class WorkspaceListComponent implements OnInit, OnDestroy {
 
   isOwner(workspace: Workspace, uid: string): boolean {
     return workspace.ownerId === uid;
+  }
+
+  private readonly WS_COLORS = [
+    '#1976d2', '#00897b', '#43a047', '#fb8c00',
+    '#e53935', '#8e24aa', '#00acc1', '#f4511e',
+    '#5e35b1', '#6d4c41',
+  ];
+
+  wsColor(id: string): string {
+    const hash = [...id].reduce((acc, c) => acc + c.charCodeAt(0), 0);
+    return this.WS_COLORS[hash % this.WS_COLORS.length];
+  }
+
+  timeAgo(timestamp: any): string {
+    if (!timestamp) return '';
+    const date: Date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+    const seconds = Math.floor((Date.now() - date.getTime()) / 1000);
+    if (seconds < 60) return 'just nu';
+    const minutes = Math.floor(seconds / 60);
+    if (minutes < 60) return `${minutes} min sedan`;
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `${hours} h sedan`;
+    const days = Math.floor(hours / 24);
+    if (days === 1) return 'igår';
+    return `${days} dagar sedan`;
+  }
+
+  shortEmail(email: string): string {
+    return email.split('@')[0];
   }
 
   checkedCount(categories: Category[]): number {

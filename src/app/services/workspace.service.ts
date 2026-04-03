@@ -220,5 +220,9 @@ export class WorkspaceService {
       collection(this.firestore, 'workspaces', workspaceId, 'changes'),
       { ...event, timestamp: serverTimestamp() }
     );
+    await updateDoc(doc(this.firestore, 'workspaces', workspaceId), {
+      lastActivityAt: serverTimestamp(),
+      lastActivityBy: event.userEmail,
+    });
   }
 }

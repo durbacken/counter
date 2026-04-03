@@ -6,8 +6,29 @@
   height: auto !important;
   min-height: 56px;
 
-  .toolbar-title { font-size: 18px; font-weight: 500; }
-  .spacer { flex: 1; }
+  .toolbar-title {
+    font-size: 18px;
+    font-weight: 500;
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .ws-avatar {
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+    font-weight: 700;
+    color: #fff;
+    flex-shrink: 0;
+    outline: 2px solid rgba(255,255,255,0.35);
+    margin-right: 4px;
+  }
 }
 
 .page-wrapper {
@@ -24,6 +45,50 @@
   margin: 0 auto;
   padding-bottom: 32px;
   box-sizing: border-box;
+}
+
+/* ─── Skeleton loaders ───────────────────────────────── */
+@keyframes shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.sk {
+  background: linear-gradient(90deg, var(--surface-variant) 25%, var(--divider) 50%, var(--surface-variant) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
+  border-radius: 6px;
+}
+
+.toolbar .sk {
+  background: linear-gradient(90deg, rgba(255,255,255,0.15) 25%, rgba(255,255,255,0.28) 50%, rgba(255,255,255,0.15) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
+  border-radius: 6px;
+}
+
+.toolbar {
+  .sk-icon         { width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0; }
+  .sk-ws-avatar    { width: 30px; height: 30px; border-radius: 8px; flex-shrink: 0; margin-right: 4px; }
+  .sk-toolbar-title { flex: 1; height: 16px; max-width: 160px; }
+}
+
+.skeleton-list {
+  background: var(--surface);
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  margin-bottom: 16px;
+}
+
+.skeleton-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 16px;
+  gap: 12px;
+  .sk-row-name     { height: 14px; width: 40%; }
+  .sk-row-controls { height: 36px; width: 120px; border-radius: 20px; }
 }
 
 /* ─── Workspace notes ───────────────────────────────── */
@@ -322,6 +387,31 @@
   font-size: 13px;
   color: var(--text-secondary);
   margin: 0;
+}
+
+/* ─── Last changed by ────────────────────────────────── */
+.category-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 0;
+
+  .category-name { flex: unset; }
+}
+
+.last-change {
+  font-size: 11px;
+  color: var(--text-secondary);
+  opacity: 0.7;
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.checkbox-last-change {
+  padding-left: 32px; // align under checkbox label text
 }
 
 /* ─── Inline edit ─────────────────────────────────────── */

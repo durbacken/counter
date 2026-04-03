@@ -124,6 +124,10 @@
     }
   </div>
 
+  <button mat-button class="guest-btn" [disabled]="loading" (click)="signInAsGuest()">
+    Prova utan att logga in
+  </button>
+
   <p class="footer-note">Gratis &amp; ingen annonsering</p>
 
 </div>

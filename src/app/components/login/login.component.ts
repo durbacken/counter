@@ -91,6 +91,17 @@ export class LoginComponent implements OnInit {
     }
   }
 
+  async signInAsGuest(): Promise<void> {
+    this.loading = true;
+    this.error = '';
+    try {
+      await this.auth.signInAsGuest();
+    } catch {
+      this.error = 'Kunde inte starta gästläge. Försök igen.';
+      this.loading = false;
+    }
+  }
+
   async sendMagicLink(): Promise<void> {
     const email = this.emailInput.trim();
     if (!email) return;

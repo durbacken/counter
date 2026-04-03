@@ -29,6 +29,10 @@ export interface Workspace {
   archived?: boolean;
   /** Allow anyone with the link to view this workspace without signing in. */
   isPublic?: boolean;
+  /** Email of the last person who made a change (set on every logChange call). */
+  lastActivityBy?: string;
+  /** Timestamp of the last change (set on every logChange call). */
+  lastActivityAt?: any;
 }
 
 export interface UserProfile {

@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { Router } from '@angular/router';
-import { Auth, GoogleAuthProvider, User, authState, getRedirectResult, isSignInWithEmailLink, sendSignInLinkToEmail, signInWithEmailLink, signInWithPopup, signInWithRedirect, signOut } from '@angular/fire/auth';
+import { Auth, GoogleAuthProvider, User, authState, getRedirectResult, isSignInWithEmailLink, sendSignInLinkToEmail, signInAnonymously, signInWithEmailLink, signInWithPopup, signInWithRedirect, signOut } from '@angular/fire/auth';
 import { environment } from '../../environments/environment';
 import {
   Firestore, collection, doc, getDocs, query,
@@ -63,6 +63,10 @@ export class AuthService {
 
   getSavedEmail(): string | null {
     return localStorage.getItem('emailForSignIn');
+  }
+
+  async signInAsGuest(): Promise<void> {
+    await signInAnonymously(this.auth);
   }
 
   async signOut(): Promise<void> {
