@@ -81,7 +81,10 @@ interface ShareDialogData {
               Bjud in
             </button>
           </div>
-          <p class="link-hint muted">Ett e-postmeddelande skickas med en inbjudningslänk.</p>
+          <p class="link-hint muted">
+            <mat-icon class="hint-icon">group</mat-icon>
+            Inbjudna medlemmar loggar in och kan delta aktivt — räkna, bocka av och se historik. Skiljer sig från delningslänken där besökare bara kan läsa.
+          </p>
         </div>
       }
 
