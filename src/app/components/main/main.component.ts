@@ -16,11 +16,11 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatDialog } from '@angular/material/dialog';
-import { ClipboardModule, Clipboard } from '@angular/cdk/clipboard';
 import { AuthService } from '../../services/auth.service';
 import { WorkspaceService } from '../../services/workspace.service';
 import { ChartComponent } from '../chart/chart.component';
 import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog.component';
+import { ShareDialogComponent } from '../share-dialog/share-dialog.component';
 import { CommentDialogComponent } from '../comment-dialog/comment-dialog.component';
 import { ChangeHistoryComponent } from '../change-history/change-history.component';
 import { FooterComponent } from '../footer/footer.component';
@@ -42,7 +42,6 @@ import { Category, ChangeEvent, ChangeType, Workspace } from '../../models/count
     MatSnackBarModule,
     MatFormFieldModule,
     MatInputModule,
-    ClipboardModule,
     ChartComponent,
     ChangeHistoryComponent,
     FooterComponent,
@@ -57,7 +56,6 @@ export class MainComponent {
   private readonly auth = inject(AuthService);
   private readonly dialog = inject(MatDialog);
   private readonly snackBar = inject(MatSnackBar);
-  private readonly clipboard = inject(Clipboard);
 
   @ViewChild(ChartComponent) private chartComponent?: ChartComponent;
 
@@ -202,18 +200,18 @@ export class MainComponent {
 
   // ─── Share link ─────────────────────────────────────────
 
-  copyShareUrl(workspace: Workspace): void {
-    if (workspace.isPublic) {
-      this.clipboard.copy(`${window.location.origin}/view/${this.workspaceId}`);
-      this.snackBar.open('Länk kopierad!', undefined, { duration: 2500 });
-    } else {
-      const ref = this.snackBar.open(
-        'Aktivera delningslänk i inställningarna',
-        'Inställningar',
-        { duration: 4000 }
-      );
-      ref.onAction().subscribe(() => this.goToAdmin());
-    }
+  async openShareDialog(workspace: Workspace): Promise<void> {
+    const user = await firstValueFrom(this.auth.user$);
+    this.dialog.open(ShareDialogComponent, {
+      data: {
+        workspace,
+        workspaceId: this.workspaceId,
+        currentUserEmail: user?.email ?? '',
+        isOwner: workspace.ownerId === user?.uid,
+      },
+      width: '380px',
+      maxWidth: '95vw',
+    });
   }
 
   // ─── Existing methods ────────────────────────────────────

@@ -5,7 +5,7 @@
     </button>
     <span class="toolbar-title">{{ workspace.title }}</span>
     <span class="spacer"></span>
-    <button mat-icon-button (click)="copyShareUrl(workspace)" aria-label="Dela">
+    <button mat-icon-button (click)="openShareDialog(workspace)" aria-label="Dela">
       <mat-icon>share</mat-icon>
     </button>
     @if (hasValues(workspace)) {
