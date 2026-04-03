@@ -30,18 +30,58 @@
     @if (workspaces$ | async; as workspaces) {
       @if (activeWorkspaces(workspaces).length === 0 && !showNewForm) {
         <div class="empty-state">
-          <mat-icon class="empty-icon">workspaces</mat-icon>
-          <p>Inga arbetsytor ännu.</p>
+          <p class="empty-tagline">Håll koll på det som räknas — tillsammans</p>
+
+          <div class="empty-features">
+            <div class="empty-feature">
+              <mat-icon>tag</mat-icon>
+              <div>
+                <strong>Räkna</strong>
+                <span>Räkna förekomster i realtid med enkla plus/minus-knappar.</span>
+              </div>
+            </div>
+            <div class="empty-feature">
+              <mat-icon>check_box</mat-icon>
+              <div>
+                <strong>Bocka av</strong>
+                <span>Skapa checklistor och följ framsteg i procent.</span>
+              </div>
+            </div>
+            <div class="empty-feature">
+              <mat-icon>group</mat-icon>
+              <div>
+                <strong>Samarbeta</strong>
+                <span>Bjud in andra — alla ser uppdateringar direkt.</span>
+              </div>
+            </div>
+            <div class="empty-feature">
+              <mat-icon>history</mat-icon>
+              <div>
+                <strong>Historik</strong>
+                <span>Spåra ändringar och exportera till Excel eller bild.</span>
+              </div>
+            </div>
+          </div>
+
+          <p class="empty-cta">Kom igång på några sekunder:</p>
+
           <div class="empty-actions">
             <button mat-flat-button color="primary" (click)="showNewForm = true">
               <mat-icon>add</mat-icon>
-              Skapa din första
+              Skapa din första arbetsyta
             </button>
             <button mat-button class="example-toggle"
                     (click)="showExamplePicker = !showExamplePicker">
               Eller prova ett exempel
               <mat-icon>{{ showExamplePicker ? 'expand_less' : 'expand_more' }}</mat-icon>
             </button>
+            @if (archivedWorkspaces(workspaces).length > 0) {
+              <button mat-button class="example-toggle"
+                      (click)="showArchived = !showArchived">
+                <mat-icon>{{ showArchived ? 'expand_less' : 'expand_more' }}</mat-icon>
+                Arkiverade ({{ archivedWorkspaces(workspaces).length }})
+              </button>
+            }
           </div>
           @if (showExamplePicker) {
             <div class="example-choices">
@@ -51,7 +91,7 @@
               </button>
               <button mat-stroked-button (click)="createExample('checkbox')">
                 <mat-icon>check_box</mat-icon>
-                Kryssrutor
+                Checklista
               </button>
             </div>
           }
@@ -117,11 +157,13 @@
 
       <!-- Archived workspaces -->
       @if (archivedWorkspaces(workspaces).length > 0) {
-        <button mat-button class="archived-toggle"
-                (click)="showArchived = !showArchived">
-          <mat-icon>{{ showArchived ? 'expand_less' : 'expand_more' }}</mat-icon>
-          Arkiverade ({{ archivedWorkspaces(workspaces).length }})
-        </button>
+        @if (activeWorkspaces(workspaces).length > 0) {
+          <button mat-button class="archived-toggle"
+                  (click)="showArchived = !showArchived">
+            <mat-icon>{{ showArchived ? 'expand_less' : 'expand_more' }}</mat-icon>
+            Arkiverade ({{ archivedWorkspaces(workspaces).length }})
+          </button>
+        }
         @if (showArchived) {
           <div class="workspace-list archived-list">
             @for (ws of archivedWorkspaces(workspaces); track ws.id) {
@@ -152,36 +194,45 @@
     <!-- New workspace form -->
     @if (showNewForm) {
       <div class="new-workspace-form">
+        <div class="form-header">
+          <span class="form-title">Ny arbetsyta</span>
+          <span class="form-sub">Redo att använda direkt — lägg till kategorier när den är skapad.</span>
+        </div>
+
         <mat-form-field appearance="outline" class="full-width">
-          <mat-label>Namn på arbetsytan</mat-label>
+          <mat-label>Namn</mat-label>
           <input matInput
                  [(ngModel)]="newWorkspaceTitle"
                  (keydown.enter)="createWorkspace()"
                  autocomplete="off"
-                 autofocus />
+                 autofocus
+                 placeholder="t.ex. Lagermöte, Veckans uppgifter…" />
         </mat-form-field>
 
         <p class="field-label">Välj läge</p>
-        <mat-button-toggle-group [(ngModel)]="newWorkspaceMode" class="mode-toggle">
-          <mat-button-toggle value="counter">
+        <div class="mode-cards">
+          <div class="mode-card" [class.selected]="newWorkspaceMode === 'counter'" (click)="newWorkspaceMode = 'counter'">
             <mat-icon>tag</mat-icon>
-            Räknare
-          </mat-button-toggle>
-          <mat-button-toggle value="checkbox">
+            <strong>Räknare</strong>
+            <span>Räkna förekomster upp och ned</span>
+          </div>
+          <div class="mode-card" [class.selected]="newWorkspaceMode === 'checkbox'" (click)="newWorkspaceMode = 'checkbox'">
             <mat-icon>check_box</mat-icon>
-            Kryssrutor
-          </mat-button-toggle>
-        </mat-button-toggle-group>
-        <p class="mode-hint">
-          @if (newWorkspaceMode === 'counter') {
-            Räkna förekomster — varje kategori räknar upp och ned.
-          } @else {
-            Bocka av kategorier — markera vad som är klart eller ej.
-          }
-        </p>
+            <strong>Checklista</strong>
+            <span>Bocka av vad som är klart</span>
+          </div>
+        </div>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Beskrivning (valfritt)</mat-label>
+          <textarea matInput
+                    [(ngModel)]="newWorkspaceNotes"
+                    rows="2"
+                    placeholder="Vad ska du hålla koll på?"></textarea>
+        </mat-form-field>
 
         <div class="form-actions">
-          <button mat-button (click)="showNewForm = false; newWorkspaceTitle = ''; newWorkspaceMode = 'counter'">Avbryt</button>
+          <button mat-button (click)="showNewForm = false; newWorkspaceTitle = ''; newWorkspaceNotes = ''; newWorkspaceMode = 'counter'">Avbryt</button>
           <button mat-flat-button color="primary"
                   (click)="createWorkspace()"
                   [disabled]="!newWorkspaceTitle.trim()">

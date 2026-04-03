@@ -27,10 +27,10 @@ Alla som behöver räkna eller följa upp saker tillsammans:
 
 ### Två lägen
 
-| Räknare | Kryssrutor |
-|---|---|
-| Öka och minska namngivna kategorier | Bocka av punkter i en lista |
-| Se live-summor över alla kategorier | Följ framsteg i procent |
+| Räknare | Checklistor                      |
+|---|----------------------------------|
+| Öka och minska namngivna kategorier | Bocka av punkter i en lista      |
+| Se live-summor över alla kategorier | Följ framsteg i procent          |
 | Exportera sammanfattning som PNG-bild | Exportera avklarad lista som PNG |
 
 ### Realtidssamarbete

@@ -5,31 +5,33 @@
     </button>
     <span class="toolbar-title">{{ workspace.title }}</span>
     <span class="spacer"></span>
-    <button mat-icon-button [matMenuTriggerFor]="overflowMenu" aria-label="Mer">
-      <mat-icon>more_vert</mat-icon>
-    </button>
-    <mat-menu #overflowMenu="matMenu">
-      <button mat-menu-item (click)="confirmReset()">
-        <mat-icon>restart_alt</mat-icon>
-        Nollställ
+    @if (hasValues(workspace)) {
+      <button mat-icon-button [matMenuTriggerFor]="overflowMenu" aria-label="Mer">
+        <mat-icon>more_vert</mat-icon>
       </button>
-      <mat-divider />
-      @if (workspace.enableHistory) {
-        <button mat-menu-item (click)="exportPng()">
-          <mat-icon>image</mat-icon>
-          Exportera bild (PNG)
+      <mat-menu #overflowMenu="matMenu">
+        <button mat-menu-item (click)="confirmReset()">
+          <mat-icon>restart_alt</mat-icon>
+          Nollställ
         </button>
-        <button mat-menu-item (click)="exportXls()">
-          <mat-icon>table_chart</mat-icon>
-          Exportera historik (XLS)
-        </button>
-      } @else {
-        <button mat-menu-item (click)="exportPng()">
-          <mat-icon>image</mat-icon>
-          Exportera bild (PNG)
-        </button>
-      }
-    </mat-menu>
+        <mat-divider />
+        @if (workspace.enableHistory) {
+          <button mat-menu-item (click)="exportPng()">
+            <mat-icon>image</mat-icon>
+            Exportera bild (PNG)
+          </button>
+          <button mat-menu-item (click)="exportXls()">
+            <mat-icon>table_chart</mat-icon>
+            Exportera historik (XLS)
+          </button>
+        } @else {
+          <button mat-menu-item (click)="exportPng()">
+            <mat-icon>image</mat-icon>
+            Exportera bild (PNG)
+          </button>
+        }
+      </mat-menu>
+    }
     @if (canAccessSettings$ | async) {
       <button mat-icon-button (click)="goToAdmin()" aria-label="Inställningar">
         <mat-icon>settings</mat-icon>
@@ -102,14 +104,19 @@
           <div class="chart-placeholder"></div>
         }
       } @else {
-        <div class="progress-summary">
-          <div class="progress-label">
-            <span>{{ checkedCount(workspace.categories) }} av {{ workspace.categories.length }} klara</span>
-            <span class="progress-pct">{{ progressPct(workspace.categories) }}%</span>
-          </div>
-          <mat-progress-bar
-            mode="determinate"
-            [value]="progressPct(workspace.categories)" />
+        <div class="progress-summary" [class.complete]="progressPct(workspace.categories) === 100">
+          <p class="progress-message">{{ progressMessage(workspace.categories) }}</p>
+          @if (progressPct(workspace.categories) === 100) {
+            <p class="complete-sub">Alla {{ workspace.categories.length }} uppgifter avklarade</p>
+          } @else {
+            <div class="progress-label">
+              <span>{{ checkedCount(workspace.categories) }} av {{ workspace.categories.length }} klara</span>
+              <span class="progress-pct">{{ progressPct(workspace.categories) }}%</span>
+            </div>
+            <mat-progress-bar
+              mode="determinate"
+              [value]="progressPct(workspace.categories)" />
+          }
         </div>
       }
 
@@ -122,13 +129,67 @@
 
     } @else {
       <div class="empty-state">
-        <mat-icon class="empty-icon">bar_chart</mat-icon>
-        <p>Inga kategorier ännu.</p>
+        <p class="empty-title">Din arbetsyta är redo!</p>
+        <p class="empty-sub">Följ stegen nedan för att komma igång.</p>
+
+        <div class="empty-steps">
+          <div class="empty-step">
+            <span class="step-number">1</span>
+            <div>
+              <strong>Lägg till kategorier</strong>
+              <span>
+                @if ((workspace.mode ?? 'counter') === 'counter') {
+                  Skapa de saker du vill räkna — t.ex. "Kaffe", "Möten" eller "Pauser".
+                } @else {
+                  Skapa punkterna du vill bocka av — t.ex. uppgifter eller kontrollpunkter.
+                }
+              </span>
+            </div>
+          </div>
+          <div class="empty-step">
+            <span class="step-number">2</span>
+            <div>
+              <strong>Bjud in ditt team</strong>
+              <span>Dela arbetsytan med kollegor — alla ser uppdateringar i realtid.</span>
+            </div>
+          </div>
+          <div class="empty-step">
+            <span class="step-number">3</span>
+            <div>
+              @if ((workspace.mode ?? 'counter') === 'counter') {
+                <strong>Räkna tillsammans</strong>
+                <span>Tryck på + och − för att räkna. Exportera resultaten som bild eller Excel.</span>
+              } @else {
+                <strong>Bocka av tillsammans</strong>
+                <span>Markera vad som är klart. Följ framsteg i procent i realtid.</span>
+              }
+            </div>
+          </div>
+        </div>
+
         @if (isOwner$ | async) {
-          <button mat-flat-button color="primary" (click)="goToAdmin()">
+          <button mat-flat-button color="primary" class="empty-btn" (click)="goToAdmin()">
             <mat-icon>add</mat-icon>
             Lägg till kategorier
           </button>
+          <button mat-button class="example-toggle" (click)="showExampleHint = !showExampleHint">
+            Eller prova ett exempel
+            <mat-icon>{{ showExampleHint ? 'expand_less' : 'expand_more' }}</mat-icon>
+          </button>
+          @if (showExampleHint) {
+            <div class="example-choices">
+              <p class="example-preview">
+                @if ((workspace.mode ?? 'counter') === 'counter') {
+                  Kaffe · Möten · Pauser · Samtal
+                } @else {
+                  Handla mat · Betala räkningar · Städa · Ring läkaren
+                }
+              </p>
+              <button mat-stroked-button (click)="loadExample(workspace)">
+                Lägg till dessa kategorier
+              </button>
+            </div>
+          }
         }
       </div>
     }

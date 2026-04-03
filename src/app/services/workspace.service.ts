@@ -28,15 +28,17 @@ export class WorkspaceService {
     ) as Observable<Workspace>;
   }
 
-  async createWorkspace(title: string, uid: string, email: string, mode: WorkspaceMode): Promise<string> {
-    const ref = await addDoc(collection(this.firestore, 'workspaces'), {
+  async createWorkspace(title: string, uid: string, email: string, mode: WorkspaceMode, notes?: string): Promise<string> {
+    const data: Record<string, unknown> = {
       title,
       ownerId: uid,
       members: [uid],
       memberEmails: { [uid]: email },
       categories: [],
       mode
-    });
+    };
+    if (notes) data['notes'] = notes;
+    const ref = await addDoc(collection(this.firestore, 'workspaces'), data);
     return ref.id;
   }
 

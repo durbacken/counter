@@ -49,6 +49,8 @@ export class MainComponent {
 
   @ViewChild(ChartComponent) private chartComponent?: ChartComponent;
 
+  showExampleHint = false;
+
   readonly workspace$ = this.route.paramMap.pipe(
     switchMap(params => this.workspaceService.getWorkspace(params.get('id')!))
   );
@@ -153,6 +155,23 @@ export class MainComponent {
     }
   }
 
+  async loadExample(workspace: Workspace): Promise<void> {
+    const mode = workspace.mode ?? 'counter';
+    const names = mode === 'counter'
+      ? ['Kaffe', 'Möten', 'Pauser', 'Samtal']
+      : ['Handla mat', 'Betala räkningar', 'Städa', 'Ring läkaren'];
+    const categories: Category[] = names.map(name => ({ id: crypto.randomUUID(), name, count: 0 }));
+    await this.workspaceService.updateCategories(this.workspaceId, categories);
+    this.showExampleHint = false;
+  }
+
+  hasValues(workspace: Workspace): boolean {
+    if ((workspace.mode ?? 'counter') === 'checkbox') {
+      return workspace.categories.some(c => c.checked);
+    }
+    return workspace.categories.some(c => c.count > 0);
+  }
+
   checkedCount(categories: Category[]): number {
     return categories.filter(c => c.checked).length;
   }
@@ -160,6 +179,17 @@ export class MainComponent {
   progressPct(categories: Category[]): number {
     if (!categories.length) return 0;
     return Math.round(this.checkedCount(categories) / categories.length * 100);
+  }
+
+  progressMessage(categories: Category[]): string {
+    const pct = this.progressPct(categories);
+    if (pct === 0)  return 'Sätt igång! 🚀';
+    if (pct < 25)   return 'Bra start! 👏';
+    if (pct < 50)   return 'På god väg! 💪';
+    if (pct === 50) return 'Halvvägs! 🌟';
+    if (pct < 75)   return 'Mer än hälften klar! 💪';
+    if (pct < 100)  return 'Nästan klar! 🔥';
+    return 'Klart! Bra jobbat! 🎉';
   }
 
   goBack(): void {

@@ -10,7 +10,6 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatDialog } from '@angular/material/dialog';
 import { AuthService } from '../../services/auth.service';
 import { WorkspaceService } from '../../services/workspace.service';
@@ -30,7 +29,6 @@ import { Category, Workspace, WorkspaceMode } from '../../models/counter.model';
     MatCardModule,
     MatFormFieldModule,
     MatInputModule,
-    MatButtonToggleModule,
     FooterComponent,
   ],
   templateUrl: './workspace-list.component.html',
@@ -58,6 +56,7 @@ export class WorkspaceListComponent implements OnInit, OnDestroy {
   };
 
   newWorkspaceTitle = '';
+  newWorkspaceNotes = '';
   newWorkspaceMode: WorkspaceMode = 'counter';
   showNewForm = false;
   showExamplePicker = false;
@@ -136,9 +135,10 @@ export class WorkspaceListComponent implements OnInit, OnDestroy {
     if (!title) return;
     const user = await firstValueFrom(this.user$);
     const id = await this.workspaceService.createWorkspace(
-      title, user!.uid, user!.email!, this.newWorkspaceMode
+      title, user!.uid, user!.email!, this.newWorkspaceMode, this.newWorkspaceNotes.trim() || undefined
     );
     this.newWorkspaceTitle = '';
+    this.newWorkspaceNotes = '';
     this.newWorkspaceMode = 'counter';
     this.showNewForm = false;
     this.router.navigate(['/workspace', id]);
