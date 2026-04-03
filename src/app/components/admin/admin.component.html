@@ -4,6 +4,10 @@
     <mat-icon>arrow_back</mat-icon>
   </button>
   <span>Inställningar</span>
+  <span class="spacer"></span>
+  <button mat-icon-button (click)="duplicateWorkspace()" aria-label="Duplicera" matTooltip="Duplicera">
+    <mat-icon>content_copy</mat-icon>
+  </button>
 </mat-toolbar>
 
 <div class="container">
@@ -126,6 +130,26 @@
         Kommentarer – fråga om kommentar vid varje ändring
       </mat-checkbox>
     </div>
+  </section>
+
+  <mat-divider />
+
+  <!-- ─── Historik ─────────────────────────────── -->
+  <section class="section">
+    <button mat-button class="history-toggle" (click)="showHistory = !showHistory">
+      <mat-icon>{{ showHistory ? 'expand_less' : 'expand_more' }}</mat-icon>
+      Historik ({{ changes.length }} ändringar)
+    </button>
+    @if (showHistory) {
+      @if (changes.length === 0) {
+        <p class="hint">Inga ändringar loggade än.</p>
+      } @else {
+        <app-change-history
+          [categories]="workspace.categories"
+          [changes]="changes"
+          [showComments]="workspace.enableComments ?? false" />
+      }
+    }
   </section>
 
   <mat-divider />

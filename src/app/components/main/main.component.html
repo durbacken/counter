@@ -53,54 +53,62 @@
 
       <!-- ─── Counter mode ───────────────────────────── -->
       @if ((workspace.mode ?? 'counter') === 'counter') {
-        <div class="category-list">
+        <div class="category-list" cdkDropList (cdkDropListDropped)="dropCategory($event, workspace.categories)">
           @for (category of workspace.categories; track category.id; let last = $last) {
-            <div class="category-row">
-              @if (editMode && editingCategoryId === category.id) {
-                <input class="inline-edit-input"
-                       [(ngModel)]="editingCategoryName"
-                       (keydown.enter)="saveInlineEdit(workspace.categories)"
-                       (keydown.escape)="cancelInlineEdit()"
-                       autocomplete="off" />
-                <div class="inline-edit-actions">
-                  <button mat-icon-button (click)="saveInlineEdit(workspace.categories)" aria-label="Spara">
-                    <mat-icon>check</mat-icon>
-                  </button>
-                  <button mat-icon-button (click)="cancelInlineEdit()" aria-label="Avbryt">
-                    <mat-icon>close</mat-icon>
-                  </button>
-                </div>
-              } @else if (editMode) {
-                <span class="category-name">{{ category.name }}</span>
-                <div class="inline-row-actions">
-                  <button mat-icon-button (click)="startInlineEdit(category)" aria-label="Redigera">
-                    <mat-icon>edit</mat-icon>
-                  </button>
-                  <button mat-icon-button color="warn" (click)="confirmDeleteInline(category, workspace.categories)" aria-label="Ta bort">
-                    <mat-icon>delete</mat-icon>
-                  </button>
-                </div>
-              } @else {
-                <span class="category-name">{{ category.name }}</span>
-                <div class="controls">
-                  <button mat-mini-fab
-                          class="btn-decrement"
-                          [disabled]="category.count === 0"
-                          (click)="decrement(category)"
-                          aria-label="Minska">
-                    <mat-icon>remove</mat-icon>
-                  </button>
-                  <span class="count">{{ category.count }}</span>
-                  <button mat-mini-fab
-                          color="primary"
-                          (click)="increment(category)"
-                          aria-label="Öka">
-                    <mat-icon>add</mat-icon>
-                  </button>
-                </div>
-              }
+            <div cdkDrag [cdkDragDisabled]="!editMode">
+              <div class="category-row">
+                @if (editMode && editingCategoryId === category.id) {
+                  <input class="inline-edit-input"
+                         [(ngModel)]="editingCategoryName"
+                         (keydown.enter)="saveInlineEdit(workspace.categories)"
+                         (keydown.escape)="cancelInlineEdit()"
+                         autocomplete="off" />
+                  <div class="inline-edit-actions">
+                    <button mat-icon-button (click)="saveInlineEdit(workspace.categories)" aria-label="Spara">
+                      <mat-icon>check</mat-icon>
+                    </button>
+                    <button mat-icon-button (click)="cancelInlineEdit()" aria-label="Avbryt">
+                      <mat-icon>close</mat-icon>
+                    </button>
+                  </div>
+                } @else if (editMode) {
+                  <mat-icon class="drag-handle" cdkDragHandle>drag_indicator</mat-icon>
+                  <span class="category-name">{{ category.name }}</span>
+                  <div class="inline-row-actions">
+                    @if (category.count > 0) {
+                      <button mat-icon-button (click)="resetCategory(category)" aria-label="Nollställ">
+                        <mat-icon>restart_alt</mat-icon>
+                      </button>
+                    }
+                    <button mat-icon-button (click)="startInlineEdit(category)" aria-label="Redigera">
+                      <mat-icon>edit</mat-icon>
+                    </button>
+                    <button mat-icon-button color="warn" (click)="confirmDeleteInline(category, workspace.categories)" aria-label="Ta bort">
+                      <mat-icon>delete</mat-icon>
+                    </button>
+                  </div>
+                } @else {
+                  <span class="category-name">{{ category.name }}</span>
+                  <div class="controls">
+                    <button mat-mini-fab
+                            class="btn-decrement"
+                            [disabled]="category.count === 0"
+                            (click)="decrement(category)"
+                            aria-label="Minska">
+                      <mat-icon>remove</mat-icon>
+                    </button>
+                    <span class="count">{{ category.count }}</span>
+                    <button mat-mini-fab
+                            color="primary"
+                            (click)="increment(category)"
+                            aria-label="Öka">
+                      <mat-icon>add</mat-icon>
+                    </button>
+                  </div>
+                }
+              </div>
+              @if (!last) { <mat-divider /> }
             </div>
-            @if (!last) { <mat-divider /> }
           }
           @if (editMode) {
             <mat-divider />
@@ -120,43 +128,46 @@
 
       <!-- ─── Checkbox mode ─────────────────────────── -->
       @if ((workspace.mode ?? 'counter') === 'checkbox') {
-        <div class="category-list">
+        <div class="category-list" cdkDropList (cdkDropListDropped)="dropCategory($event, workspace.categories)">
           @for (category of workspace.categories; track category.id; let last = $last) {
-            <div class="category-row checkbox-row">
-              @if (editMode && editingCategoryId === category.id) {
-                <input class="inline-edit-input"
-                       [(ngModel)]="editingCategoryName"
-                       (keydown.enter)="saveInlineEdit(workspace.categories)"
-                       (keydown.escape)="cancelInlineEdit()"
-                       autocomplete="off" />
-                <div class="inline-edit-actions">
-                  <button mat-icon-button (click)="saveInlineEdit(workspace.categories)" aria-label="Spara">
-                    <mat-icon>check</mat-icon>
-                  </button>
-                  <button mat-icon-button (click)="cancelInlineEdit()" aria-label="Avbryt">
-                    <mat-icon>close</mat-icon>
-                  </button>
-                </div>
-              } @else if (editMode) {
-                <span class="category-name">{{ category.name }}</span>
-                <div class="inline-row-actions">
-                  <button mat-icon-button (click)="startInlineEdit(category)" aria-label="Redigera">
-                    <mat-icon>edit</mat-icon>
-                  </button>
-                  <button mat-icon-button color="warn" (click)="confirmDeleteInline(category, workspace.categories)" aria-label="Ta bort">
-                    <mat-icon>delete</mat-icon>
-                  </button>
-                </div>
-              } @else {
-                <mat-checkbox
-                  [checked]="category.checked ?? false"
-                  (change)="toggleCheck(category)"
-                  class="category-checkbox">
-                  {{ category.name }}
-                </mat-checkbox>
-              }
+            <div cdkDrag [cdkDragDisabled]="!editMode">
+              <div class="category-row checkbox-row">
+                @if (editMode && editingCategoryId === category.id) {
+                  <input class="inline-edit-input"
+                         [(ngModel)]="editingCategoryName"
+                         (keydown.enter)="saveInlineEdit(workspace.categories)"
+                         (keydown.escape)="cancelInlineEdit()"
+                         autocomplete="off" />
+                  <div class="inline-edit-actions">
+                    <button mat-icon-button (click)="saveInlineEdit(workspace.categories)" aria-label="Spara">
+                      <mat-icon>check</mat-icon>
+                    </button>
+                    <button mat-icon-button (click)="cancelInlineEdit()" aria-label="Avbryt">
+                      <mat-icon>close</mat-icon>
+                    </button>
+                  </div>
+                } @else if (editMode) {
+                  <mat-icon class="drag-handle" cdkDragHandle>drag_indicator</mat-icon>
+                  <span class="category-name">{{ category.name }}</span>
+                  <div class="inline-row-actions">
+                    <button mat-icon-button (click)="startInlineEdit(category)" aria-label="Redigera">
+                      <mat-icon>edit</mat-icon>
+                    </button>
+                    <button mat-icon-button color="warn" (click)="confirmDeleteInline(category, workspace.categories)" aria-label="Ta bort">
+                      <mat-icon>delete</mat-icon>
+                    </button>
+                  </div>
+                } @else {
+                  <mat-checkbox
+                    [checked]="category.checked ?? false"
+                    (change)="toggleCheck(category)"
+                    class="category-checkbox">
+                    {{ category.name }}
+                  </mat-checkbox>
+                }
+              </div>
+              @if (!last) { <mat-divider /> }
             </div>
-            @if (!last) { <mat-divider /> }
           }
           @if (editMode) {
             <mat-divider />

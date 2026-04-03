@@ -71,7 +71,7 @@ interface ShareDialogData {
                    type="email"
                    (keydown.enter)="inviteMember()"
                    placeholder="namn&#64;exempel.se"
-                   autocomplete="off" />
+                   autocomplete="email" />
           </mat-form-field>
           <button mat-flat-button color="primary" class="invite-btn"
                   [disabled]="!inviteEmail.trim() || inviting"

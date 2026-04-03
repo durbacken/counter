@@ -22,7 +22,8 @@ import { AuthService } from '../../services/auth.service';
 import { WorkspaceService } from '../../services/workspace.service';
 import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog.component';
 import { FooterComponent } from '../footer/footer.component';
-import { Category, Workspace } from '../../models/counter.model';
+import { ChangeHistoryComponent } from '../change-history/change-history.component';
+import { Category, ChangeEvent, Workspace } from '../../models/counter.model';
 
 @Component({
   selector: 'app-admin',
@@ -40,6 +41,7 @@ import { Category, Workspace } from '../../models/counter.model';
     DragDropModule,
     ClipboardModule,
     FooterComponent,
+    ChangeHistoryComponent,
   ],
   templateUrl: './admin.component.html',
   styleUrl: './admin.component.scss'
@@ -68,6 +70,8 @@ export class AdminComponent implements OnInit {
   inviteEmail = '';
   inviting = false;
   knownEmails: string[] = [];
+  changes: ChangeEvent[] = [];
+  showHistory = false;
 
   get shareUrl(): string {
     return `${window.location.origin}/view/${this.workspaceId}`;
@@ -134,11 +138,22 @@ export class AdminComponent implements OnInit {
             });
         }
       });
+
+    this.workspaceService.getChanges(this.cachedWorkspaceId)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(changes => { this.changes = changes; });
   }
 
   goBack(): void {
     this.saveNotes();
     this.router.navigate(['/workspace', this.workspaceId]);
+  }
+
+  async duplicateWorkspace(): Promise<void> {
+    if (!this.workspace) return;
+    const email = this.workspace.memberEmails[this.currentUserId] ?? '';
+    const newId = await this.workspaceService.duplicateWorkspace(this.workspace, this.currentUserId, email);
+    this.router.navigate(['/workspace', newId]);
   }
 
   saveTitle(): void {

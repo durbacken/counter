@@ -90,6 +90,7 @@
       opacity: 0.4;
     }
   }
+
 }
 
 /* ─── Checkbox progress summary ─────────────────────── */
@@ -346,6 +347,28 @@
   display: flex;
   margin-left: auto;
   flex-shrink: 0;
+}
+
+.drag-handle {
+  cursor: grab;
+  color: var(--text-secondary);
+  flex-shrink: 0;
+  margin-right: 4px;
+}
+
+.cdk-drag-preview {
+  background: var(--surface);
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+  padding: 0 16px;
+}
+
+.cdk-drag-placeholder { opacity: 0.3; }
+
+.cdk-drag-animating { transition: transform 200ms ease; }
+
+.category-list.cdk-drop-list-dragging .category-row:not(.cdk-drag-placeholder) {
+  transition: transform 200ms ease;
 }
 
 .inline-add-row {

@@ -81,6 +81,13 @@
   overflow: hidden;
 }
 
+.swipe-actions-owner {
+  position: absolute;
+  right: 0; top: 0; bottom: 0;
+  width: 176px;
+  display: flex;
+}
+
 .swipe-action {
   position: absolute;
   right: 0; top: 0; bottom: 0;
@@ -96,9 +103,18 @@
   font-weight: 500;
   cursor: pointer;
   user-select: none;
+  flex: 1;
 
   mat-icon { font-size: 22px; width: 22px; height: 22px; }
 }
+
+.swipe-actions-owner .swipe-action {
+  position: static;
+  width: auto;
+}
+
+.swipe-action-duplicate { background: #1565c0; }
+.swipe-action-archive   { background: #c62828; }
 
 /* ─── Workspace card ─────────────────────────────────── */
 .workspace-card {
@@ -109,7 +125,8 @@
   margin: 0;
   border-radius: 12px;
 
-  &.swiped { transform: translateX(-88px); }
+  &.swiped       { transform: translateX(-88px); }
+  &.swiped-owner { transform: translateX(-176px); }
 }
 
 .ws-header {

@@ -73,15 +73,15 @@
           <p class="empty-cta">Kom igång på några sekunder:</p>
 
           <div class="new-ws-choices">
-            <button class="new-ws-btn" (click)="startNew('counter')">
-              <mat-icon>tag</mat-icon>
-              <strong>Ny räknare</strong>
-              <span>Räkna förekomster i realtid med plus/minus</span>
-            </button>
             <button class="new-ws-btn" (click)="startNew('checkbox')">
               <mat-icon>check_box</mat-icon>
               <strong>Ny checklista</strong>
               <span>Bocka av och följ framsteg i procent</span>
+            </button>
+            <button class="new-ws-btn" (click)="startNew('counter')">
+              <mat-icon>tag</mat-icon>
+              <strong>Ny räknare</strong>
+              <span>Räkna förekomster i realtid med plus/minus</span>
             </button>
           </div>
 
@@ -101,13 +101,13 @@
           </div>
           @if (showExamplePicker) {
             <div class="example-choices">
-              <button mat-stroked-button (click)="createExample('counter')">
-                <mat-icon>tag</mat-icon>
-                Räknare
-              </button>
               <button mat-stroked-button (click)="createExample('checkbox')">
                 <mat-icon>check_box</mat-icon>
                 Checklista
+              </button>
+              <button mat-stroked-button (click)="createExample('counter')">
+                <mat-icon>tag</mat-icon>
+                Räknare
               </button>
             </div>
           }
@@ -119,20 +119,31 @@
                  (touchstart)="onTouchStart($event, ws.id)"
                  (touchend)="onTouchEnd($event, ws.id)">
 
-              <!-- Action revealed by swiping left -->
-              <div class="swipe-action"
-                   (click)="confirmAction(ws, user.uid); $event.stopPropagation()">
-                @if (isOwner(ws, user.uid)) {
-                  <mat-icon>archive</mat-icon>
-                  <span>Arkivera</span>
-                } @else {
+              <!-- Actions revealed by swiping left -->
+              @if (isOwner(ws, user.uid)) {
+                <div class="swipe-actions-owner">
+                  <div class="swipe-action swipe-action-duplicate"
+                       (click)="duplicateWorkspace(ws, user); $event.stopPropagation()">
+                    <mat-icon>content_copy</mat-icon>
+                    <span>Duplicera</span>
+                  </div>
+                  <div class="swipe-action swipe-action-archive"
+                       (click)="confirmAction(ws, user.uid); $event.stopPropagation()">
+                    <mat-icon>archive</mat-icon>
+                    <span>Arkivera</span>
+                  </div>
+                </div>
+              } @else {
+                <div class="swipe-action"
+                     (click)="confirmAction(ws, user.uid); $event.stopPropagation()">
                   <mat-icon>exit_to_app</mat-icon>
                   <span>Lämna</span>
-                }
-              </div>
+                </div>
+              }
 
               <mat-card class="workspace-card"
-                        [class.swiped]="swipedId === ws.id"
+                        [class.swiped]="swipedId === ws.id && !isOwner(ws, user.uid)"
+                        [class.swiped-owner]="swipedId === ws.id && isOwner(ws, user.uid)"
                         (click)="onCardClick(ws)">
                 <mat-card-content>
                   <div class="ws-header">
@@ -212,15 +223,15 @@
   @if (activeWorkspaces((workspaces$ | async) ?? []).length > 0) {
     <div class="fab-row">
       <div class="new-ws-choices">
-        <button class="new-ws-btn" (click)="startNew('counter')">
-          <mat-icon>tag</mat-icon>
-          <strong>Ny räknare</strong>
-          <span>Räkna förekomster i realtid</span>
-        </button>
         <button class="new-ws-btn" (click)="startNew('checkbox')">
           <mat-icon>check_box</mat-icon>
           <strong>Ny checklista</strong>
           <span>Bocka av vad som är klart</span>
+        </button>
+        <button class="new-ws-btn" (click)="startNew('counter')">
+          <mat-icon>tag</mat-icon>
+          <strong>Ny räknare</strong>
+          <span>Räkna förekomster i realtid</span>
         </button>
       </div>
     </div>

@@ -88,6 +88,24 @@ export class WorkspaceService {
     await updateDoc(doc(this.firestore, 'workspaces', workspaceId), { categories: cleared });
   }
 
+  async duplicateWorkspace(workspace: Workspace, userId: string, userEmail: string): Promise<string> {
+    const id = await this.createWorkspace(`Kopia av ${workspace.title}`, userId, userEmail, workspace.mode ?? 'counter', workspace.notes);
+    const categories: Category[] = workspace.categories.map(c => ({ ...c, count: 0, checked: false }));
+    if (categories.length) await this.updateCategories(id, categories);
+    return id;
+  }
+
+  async setCategoryCount(workspaceId: string, categoryId: string, count: number): Promise<void> {
+    const ref = doc(this.firestore, 'workspaces', workspaceId);
+    await runTransaction(this.firestore, async tx => {
+      const snap = await tx.get(ref);
+      const categories = (snap.data()!['categories'] as Category[]).map(c =>
+        c.id === categoryId ? { ...c, count } : c
+      );
+      tx.update(ref, { categories });
+    });
+  }
+
   /**
    * Invite a user by email. If they already have an account they are added
    * immediately. If not, a pending invite is stored and processed when they

@@ -55,10 +55,10 @@ export class DevWorkspaceService {
 
   // ─── Workspace writes ──────────────────────────────────────────────────────
 
-  async createWorkspace(title: string, uid: string, email: string, mode: WorkspaceMode): Promise<string> {
+  async createWorkspace(title: string, uid: string, email: string, mode: WorkspaceMode, notes?: string): Promise<string> {
     const id = crypto.randomUUID();
     const ws = { ...this.ws$.value };
-    ws[id] = { id, title, ownerId: uid, members: [uid], memberEmails: { [uid]: email }, categories: [], mode };
+    ws[id] = { id, title, ownerId: uid, members: [uid], memberEmails: { [uid]: email }, categories: [], mode, ...(notes ? { notes } : {}) };
     this.saveWs(ws);
     return id;
   }
@@ -88,6 +88,20 @@ export class DevWorkspaceService {
   async toggleCheck(workspaceId: string, categoryId: string): Promise<void> {
     const categories = this.ws$.value[workspaceId].categories.map(c =>
       c.id === categoryId ? { ...c, checked: !c.checked } : c
+    );
+    this.patchWorkspace(workspaceId, { categories });
+  }
+
+  async duplicateWorkspace(workspace: Workspace, userId: string, userEmail: string): Promise<string> {
+    const id = await this.createWorkspace(`Kopia av ${workspace.title}`, userId, userEmail, workspace.mode ?? 'counter', workspace.notes);
+    const categories: Category[] = workspace.categories.map(c => ({ ...c, count: 0, checked: false }));
+    if (categories.length) await this.updateCategories(id, categories);
+    return id;
+  }
+
+  async setCategoryCount(workspaceId: string, categoryId: string, count: number): Promise<void> {
+    const categories = this.ws$.value[workspaceId].categories.map(c =>
+      c.id === categoryId ? { ...c, count } : c
     );
     this.patchWorkspace(workspaceId, { categories });
   }

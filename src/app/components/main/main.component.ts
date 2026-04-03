@@ -1,4 +1,4 @@
-import { Component, ViewChild, inject } from '@angular/core';
+import { Component, OnDestroy, OnInit, ViewChild, inject, signal } from '@angular/core';
 import { AsyncPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -12,10 +12,11 @@ import { MatDividerModule } from '@angular/material/divider';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
-import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MAT_SNACK_BAR_DATA, MatSnackBar, MatSnackBarModule, MatSnackBarRef } from '@angular/material/snack-bar';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatDialog } from '@angular/material/dialog';
+import { CdkDragDrop, DragDropModule, moveItemInArray } from '@angular/cdk/drag-drop';
 import { AuthService } from '../../services/auth.service';
 import { WorkspaceService } from '../../services/workspace.service';
 import { ChartComponent } from '../chart/chart.component';
@@ -25,6 +26,44 @@ import { CommentDialogComponent } from '../comment-dialog/comment-dialog.compone
 import { ChangeHistoryComponent } from '../change-history/change-history.component';
 import { FooterComponent } from '../footer/footer.component';
 import { Category, ChangeEvent, ChangeType, Workspace } from '../../models/counter.model';
+
+@Component({
+  selector: 'app-undo-snackbar',
+  standalone: true,
+  imports: [],
+  template: `
+    <span class="snack-msg">{{ data.message }}</span>
+    <span class="snack-actions">
+      <button class="snack-btn" (click)="ref.dismissWithAction()">Ångra</button>
+      <span class="snack-countdown">{{ countdown() }}s</span>
+      <button class="snack-btn snack-dismiss" (click)="ref.dismiss()" aria-label="Stäng">✕</button>
+    </span>
+  `,
+  styles: [`:host { display:flex; align-items:center; justify-content:space-between; width:100%; gap:8px; box-sizing:border-box; }
+    .snack-msg { flex:1; font-size:14px; }
+    .snack-actions { display:flex; align-items:center; flex-shrink:0; gap:2px; }
+    .snack-btn { background:none; border:none; color:inherit; cursor:pointer; font-size:14px; font-weight:500; letter-spacing:.04em; text-transform:uppercase; padding:0 8px; line-height:1; font-family:inherit; }
+    .snack-countdown { font-size:11px; opacity:0.55; min-width:22px; text-align:center; }
+    .snack-dismiss { font-size:16px; text-transform:none; letter-spacing:0; padding:0 4px; opacity:0.7; }`]
+})
+export class UndoSnackbarComponent implements OnInit, OnDestroy {
+  readonly data = inject<{ message: string }>(MAT_SNACK_BAR_DATA);
+  readonly ref = inject(MatSnackBarRef);
+  readonly countdown = signal(8);
+  private timer?: ReturnType<typeof setInterval>;
+
+  ngOnInit(): void {
+    this.timer = setInterval(() => {
+      const next = this.countdown() - 1;
+      this.countdown.set(next);
+      if (next <= 0) clearInterval(this.timer);
+    }, 1000);
+  }
+
+  ngOnDestroy(): void {
+    clearInterval(this.timer);
+  }
+}
 
 @Component({
   selector: 'app-main',
@@ -42,6 +81,7 @@ import { Category, ChangeEvent, ChangeType, Workspace } from '../../models/count
     MatSnackBarModule,
     MatFormFieldModule,
     MatInputModule,
+    DragDropModule,
     ChartComponent,
     ChangeHistoryComponent,
     FooterComponent,
@@ -111,7 +151,7 @@ export class MainComponent {
   }
 
   // ─── Undo ───────────────────────────────────────────────
-  private lastUndoAction: { categoryId: string; action: 'increment' | 'decrement' | 'toggle' } | null = null;
+  private lastUndoAction: { categoryId: string; action: 'increment' | 'decrement' | 'toggle' | 'reset-category'; previousCount?: number } | null = null;
 
   // ─── Inline edit ────────────────────────────────────────
   editMode = false;
@@ -149,18 +189,23 @@ export class MainComponent {
 
   private showUndoSnackbar(category: Category, action: 'increment' | 'decrement' | 'toggle'): void {
     this.lastUndoAction = { categoryId: category.id, action };
-    const ref = this.snackBar.open(`${category.name} ändrad`, 'Ångra', { duration: 4000 });
+    const ref = this.snackBar.openFromComponent(UndoSnackbarComponent, {
+      data: { message: `${category.name} ändrad` },
+      duration: 8000,
+    });
     ref.onAction().subscribe(() => this.undoLastAction());
   }
 
   private async undoLastAction(): Promise<void> {
     if (!this.lastUndoAction) return;
-    const { categoryId, action } = this.lastUndoAction;
+    const { categoryId, action, previousCount } = this.lastUndoAction;
     this.lastUndoAction = null;
     if (action === 'increment') {
       await this.workspaceService.decrement(this.workspaceId, categoryId);
     } else if (action === 'decrement') {
       await this.workspaceService.increment(this.workspaceId, categoryId);
+    } else if (action === 'reset-category' && previousCount !== undefined) {
+      await this.workspaceService.setCategoryCount(this.workspaceId, categoryId, previousCount);
     } else {
       await this.workspaceService.toggleCheck(this.workspaceId, categoryId);
     }
@@ -183,6 +228,24 @@ export class MainComponent {
     await this.workspaceService.decrement(this.workspaceId, category.id);
     await this.promptAndLog(category, 'decrement', prev, next, `Räknaren minskas: ${prev} → ${next}`);
     this.showUndoSnackbar(category, 'decrement');
+  }
+
+  resetCategory(category: Category): void {
+    if (category.count === 0) return;
+    this.dialog.open(ConfirmDialogComponent, {
+      data: { title: 'Nollställ', message: `Nollställa "${category.name}" (${category.count})?` }
+    }).afterClosed().subscribe(async confirmed => {
+      if (!confirmed) return;
+      const prev = category.count;
+      this.lastUndoAction = { categoryId: category.id, action: 'reset-category', previousCount: prev };
+      await this.workspaceService.setCategoryCount(this.workspaceId, category.id, 0);
+      await this.promptAndLog(category, 'decrement', prev, 0, `Nollställd: ${prev} → 0`);
+      const ref = this.snackBar.openFromComponent(UndoSnackbarComponent, {
+        data: { message: `${category.name} nollställd` },
+        duration: 8000,
+      });
+      ref.onAction().subscribe(() => this.undoLastAction());
+    });
   }
 
   async toggleCheck(category: Category): Promise<void> {
@@ -228,6 +291,13 @@ export class MainComponent {
     const updated = [...categories, newCategory];
     this.workspaceService.updateCategories(this.workspaceId, updated);
     this.newInlineCategoryName = '';
+  }
+
+  dropCategory(event: CdkDragDrop<Category[]>, categories: Category[]): void {
+    if (event.previousIndex === event.currentIndex) return;
+    const reordered = [...categories];
+    moveItemInArray(reordered, event.previousIndex, event.currentIndex);
+    this.workspaceService.updateCategories(this.workspaceId, reordered);
   }
 
   confirmDeleteInline(category: Category, categories: Category[]): void {

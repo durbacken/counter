@@ -93,6 +93,12 @@ export class WorkspaceListComponent implements OnInit, OnDestroy {
     this.router.navigate(['/new', mode]);
   }
 
+  async duplicateWorkspace(ws: Workspace, user: { uid: string; email: string | null }): Promise<void> {
+    this.swipedId = null;
+    const newId = await this.workspaceService.duplicateWorkspace(ws, user.uid, user.email ?? '');
+    this.router.navigate(['/workspace', newId]);
+  }
+
   // ── Swipe-to-reveal state ──────────────────────────────
   swipedId: string | null = null;
   private touchStartX = 0;
