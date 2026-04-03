@@ -212,6 +212,15 @@
   margin-bottom: 20px;
 }
 
+.form-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+
+  mat-icon { color: #1976d2; font-size: 22px; width: 22px; height: 22px; }
+}
+
 .form-title {
   font-size: 18px;
   font-weight: 600;
@@ -221,44 +230,41 @@
 .form-sub {
   font-size: 13px;
   color: var(--text-secondary);
-  margin-top: 3px;
   line-height: 1.4;
 }
 
-.field-label {
-  font-size: 12px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--text-secondary);
-  margin: 0 0 8px;
-}
+.form-actions { display: flex; justify-content: flex-end; gap: 8px; }
 
-.mode-cards {
+/* ─── New workspace mode buttons ─────────────────────── */
+.new-ws-choices {
   display: flex;
-  gap: 10px;
-  margin-bottom: 16px;
+  gap: 12px;
+  width: 100%;
+  margin-bottom: 12px;
 }
 
-.mode-card {
+.new-ws-btn {
   flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
-  padding: 12px 8px;
+  gap: 6px;
+  padding: 20px 12px;
+  background: var(--surface);
   border: 2px solid var(--divider);
-  border-radius: 10px;
+  border-radius: 12px;
   cursor: pointer;
   text-align: center;
-  transition: border-color 0.15s, background 0.15s;
-  user-select: none;
+  box-shadow: var(--shadow);
+  transition: border-color 0.15s, box-shadow 0.15s;
+  font-family: inherit;
+  appearance: none;
 
   mat-icon {
-    color: var(--text-secondary);
-    font-size: 24px;
-    width: 24px;
-    height: 24px;
+    font-size: 32px;
+    width: 32px;
+    height: 32px;
+    color: #1976d2;
   }
 
   strong {
@@ -273,22 +279,12 @@
     line-height: 1.35;
   }
 
-  &.selected {
+  &:hover, &:focus {
     border-color: #1976d2;
-    background: rgba(25, 118, 210, 0.06);
-
-    mat-icon { color: #1976d2; }
-    strong { color: #1976d2; }
+    box-shadow: 0 2px 10px rgba(25, 118, 210, 0.18);
+    outline: none;
   }
 }
-
-@media (prefers-color-scheme: dark) {
-  .mode-card.selected {
-    background: rgba(25, 118, 210, 0.12);
-  }
-}
-
-.form-actions { display: flex; justify-content: flex-end; gap: 8px; }
 
 /* ─── Empty state ────────────────────────────────────── */
 .empty-state {
@@ -380,9 +376,5 @@
 
 /* ─── FAB ────────────────────────────────────────────── */
 .fab-row {
-  display: flex;
-  justify-content: flex-end;
   padding: 8px 16px 16px;
 }
-
-.fab { height: 48px; min-width: 180px; }

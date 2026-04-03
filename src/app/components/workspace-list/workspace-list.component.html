@@ -65,11 +65,20 @@
 
           <p class="empty-cta">Kom igång på några sekunder:</p>
 
-          <div class="empty-actions">
-            <button mat-flat-button color="primary" (click)="showNewForm = true">
-              <mat-icon>add</mat-icon>
-              Skapa din första arbetsyta
+          <div class="new-ws-choices">
+            <button class="new-ws-btn" (click)="startNew('counter')">
+              <mat-icon>tag</mat-icon>
+              <strong>Ny räknare</strong>
+              <span>Räkna förekomster i realtid med plus/minus</span>
             </button>
+            <button class="new-ws-btn" (click)="startNew('checkbox')">
+              <mat-icon>check_box</mat-icon>
+              <strong>Ny checklista</strong>
+              <span>Bocka av och följ framsteg i procent</span>
+            </button>
+          </div>
+
+          <div class="empty-actions">
             <button mat-button class="example-toggle"
                     (click)="showExamplePicker = !showExamplePicker">
               Eller prova ett exempel
@@ -195,8 +204,17 @@
     @if (showNewForm) {
       <div class="new-workspace-form">
         <div class="form-header">
-          <span class="form-title">Ny arbetsyta</span>
-          <span class="form-sub">Redo att använda direkt — lägg till kategorier när den är skapad.</span>
+          <div class="form-title-row">
+            <mat-icon>{{ newWorkspaceMode === 'counter' ? 'tag' : 'check_box' }}</mat-icon>
+            <span class="form-title">{{ newWorkspaceMode === 'counter' ? 'Ny räknare' : 'Ny checklista' }}</span>
+          </div>
+          <span class="form-sub">
+            @if (newWorkspaceMode === 'counter') {
+              Räkna förekomster i realtid — lägg till kategorier när den är skapad.
+            } @else {
+              Bocka av punkt för punkt — lägg till kategorier när den är skapad.
+            }
+          </span>
         </div>
 
         <mat-form-field appearance="outline" class="full-width">
@@ -206,22 +224,8 @@
                  (keydown.enter)="createWorkspace()"
                  autocomplete="off"
                  autofocus
-                 placeholder="t.ex. Lagermöte, Veckans uppgifter…" />
+                 [placeholder]="newWorkspaceMode === 'counter' ? 'T.ex. Kafferäknare, Lagermöte…' : 'T.ex. Packlista, Veckans uppgifter…'" />
         </mat-form-field>
-
-        <p class="field-label">Välj läge</p>
-        <div class="mode-cards">
-          <div class="mode-card" [class.selected]="newWorkspaceMode === 'counter'" (click)="newWorkspaceMode = 'counter'">
-            <mat-icon>tag</mat-icon>
-            <strong>Räknare</strong>
-            <span>Räkna förekomster upp och ned</span>
-          </div>
-          <div class="mode-card" [class.selected]="newWorkspaceMode === 'checkbox'" (click)="newWorkspaceMode = 'checkbox'">
-            <mat-icon>check_box</mat-icon>
-            <strong>Checklista</strong>
-            <span>Bocka av vad som är klart</span>
-          </div>
-        </div>
 
         <mat-form-field appearance="outline" class="full-width">
           <mat-label>Beskrivning (valfritt)</mat-label>
@@ -246,10 +250,18 @@
 
   @if (!showNewForm && activeWorkspaces((workspaces$ | async) ?? []).length > 0) {
     <div class="fab-row">
-      <button mat-flat-button color="primary" class="fab" (click)="showNewForm = true">
-        <mat-icon>add</mat-icon>
-        Ny arbetsyta
-      </button>
+      <div class="new-ws-choices">
+        <button class="new-ws-btn" (click)="startNew('counter')">
+          <mat-icon>tag</mat-icon>
+          <strong>Ny räknare</strong>
+          <span>Räkna förekomster i realtid</span>
+        </button>
+        <button class="new-ws-btn" (click)="startNew('checkbox')">
+          <mat-icon>check_box</mat-icon>
+          <strong>Ny checklista</strong>
+          <span>Bocka av vad som är klart</span>
+        </button>
+      </div>
     </div>
   }
 

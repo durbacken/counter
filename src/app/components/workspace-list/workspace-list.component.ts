@@ -59,6 +59,11 @@ export class WorkspaceListComponent implements OnInit, OnDestroy {
   newWorkspaceNotes = '';
   newWorkspaceMode: WorkspaceMode = 'counter';
   showNewForm = false;
+
+  startNew(mode: WorkspaceMode): void {
+    this.newWorkspaceMode = mode;
+    this.showNewForm = true;
+  }
   showExamplePicker = false;
   showArchived = false;
 
