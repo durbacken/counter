@@ -34,7 +34,9 @@
       @for (s of stats; track s.uid) {
         <mat-card class="user-card">
           <mat-card-content>
-            <div class="user-header">
+
+            <!-- ── Header row ── -->
+            <div class="user-header" (click)="toggleExpand(s.uid)">
               <div class="user-avatar">{{ (s.displayName || s.email).charAt(0).toUpperCase() }}</div>
               <div class="user-info">
                 <span class="user-name">{{ s.displayName || s.email.split('@')[0] }}</span>
@@ -43,8 +45,10 @@
               <div class="user-activity-badge" [class.active]="s.lastActivityAt">
                 {{ timeAgo(s.lastActivityAt) }}
               </div>
+              <mat-icon class="expand-icon" [class.expanded]="expandedUids.has(s.uid)">expand_more</mat-icon>
             </div>
 
+            <!-- ── Summary stats ── -->
             <div class="user-stats">
               <div class="stat">
                 <span class="stat-value">{{ s.totalWorkspaces }}</span>
@@ -66,6 +70,27 @@
                 {{ s.lastActivityWorkspace }}
               </p>
             }
+
+            <!-- ── Collapsible workspace list ── -->
+            @if (expandedUids.has(s.uid) && s.workspaces.length > 0) {
+              <div class="ws-detail-list">
+                <mat-divider class="detail-divider" />
+                @for (ws of s.workspaces; track ws.id) {
+                  <div class="ws-detail-row">
+                    <mat-icon class="ws-mode-icon">{{ ws.mode === 'checkbox' ? 'check_box' : 'tag' }}</mat-icon>
+                    <div class="ws-detail-info">
+                      <span class="ws-detail-title">{{ ws.title }}</span>
+                      <span class="ws-detail-meta">
+                        {{ ws.categories }} {{ ws.categories === 1 ? 'punkt' : 'punkter' }} ·
+                        {{ ws.isOwner ? 'ägare' : 'medlem' }}
+                        @if (ws.lastActivityAt) { · {{ timeAgo(ws.lastActivityAt) }} }
+                      </span>
+                    </div>
+                  </div>
+                }
+              </div>
+            }
+
           </mat-card-content>
         </mat-card>
       }

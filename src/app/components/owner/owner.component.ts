@@ -1,11 +1,12 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { Router } from '@angular/router';
-import { AsyncPipe, DatePipe } from '@angular/common';
+import { DatePipe } from '@angular/common';
 import { Firestore, collection, getDocs } from '@angular/fire/firestore';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatCardModule } from '@angular/material/card';
+import { MatDividerModule } from '@angular/material/divider';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { AuthService } from '../../services/auth.service';
 import { Workspace } from '../../models/counter.model';
@@ -21,17 +22,27 @@ interface UserProfile {
   displayName: string | null;
 }
 
+interface WorkspaceSummary {
+  id: string;
+  title: string;
+  mode: 'counter' | 'checkbox';
+  categories: number;
+  isOwner: boolean;
+  lastActivityAt: Date | null;
+}
+
 interface UserStats extends UserProfile {
   totalWorkspaces: number;
   ownerOf: number;
   memberOf: number;
   lastActivityAt: Date | null;
   lastActivityWorkspace: string | null;
+  workspaces: WorkspaceSummary[];
 }
 
 @Component({
   selector: 'app-owner',
-  imports: [AsyncPipe, DatePipe, MatToolbarModule, MatButtonModule, MatIconModule, MatCardModule, MatProgressSpinnerModule],
+  imports: [DatePipe, MatToolbarModule, MatButtonModule, MatIconModule, MatCardModule, MatDividerModule, MatProgressSpinnerModule],
   templateUrl: './owner.component.html',
   styleUrl: './owner.component.scss',
 })
@@ -44,6 +55,15 @@ export class OwnerComponent implements OnInit {
   stats: UserStats[] = [];
   totalWorkspaces = 0;
   refreshedAt: Date | null = null;
+  expandedUids = new Set<string>();
+
+  toggleExpand(uid: string): void {
+    if (this.expandedUids.has(uid)) {
+      this.expandedUids.delete(uid);
+    } else {
+      this.expandedUids.add(uid);
+    }
+  }
 
   async ngOnInit(): Promise<void> {
     const user = await new Promise<any>(resolve => {
@@ -95,6 +115,23 @@ export class OwnerComponent implements OnInit {
           ? (lastWs.lastActivityAt?.toDate?.() ?? new Date(lastWs.lastActivityAt))
           : null;
 
+        const workspaceSummaries: WorkspaceSummary[] = mine
+          .map(ws => ({
+            id: ws.id,
+            title: ws.title,
+            mode: (ws.mode ?? 'counter') as 'counter' | 'checkbox',
+            categories: ws.categories?.length ?? 0,
+            isOwner: ws.ownerId === user.uid,
+            lastActivityAt: ws.lastActivityAt
+              ? (ws.lastActivityAt?.toDate?.() ?? new Date(ws.lastActivityAt))
+              : null,
+          }))
+          .sort((a, b) => {
+            if (!a.lastActivityAt) return 1;
+            if (!b.lastActivityAt) return -1;
+            return b.lastActivityAt.getTime() - a.lastActivityAt.getTime();
+          });
+
         return {
           ...user,
           totalWorkspaces: mine.length,
@@ -102,6 +139,7 @@ export class OwnerComponent implements OnInit {
           memberOf: mine.length - ownerOf,
           lastActivityAt,
           lastActivityWorkspace: lastWs?.title ?? null,
+          workspaces: workspaceSummaries,
         };
       }).sort((a, b) => {
         if (!a.lastActivityAt) return 1;
