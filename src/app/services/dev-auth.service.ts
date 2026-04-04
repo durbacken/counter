@@ -27,10 +27,14 @@ export class DevAuthService {
     this.userSubject.next(DEV_USER);
   }
 
-  async sendMagicLink(_email: string): Promise<void> {}
-  async completeEmailLink(_email: string): Promise<void> {}
-  isEmailLink(): boolean { return false; }
-  getSavedEmail(): string | null { return null; }
+  async signInWithPassword(_email: string, _password: string): Promise<void> {
+    this.userSubject.next(DEV_USER);
+  }
+  async createAccount(_email: string, _password: string): Promise<void> {
+    this.userSubject.next(DEV_USER);
+  }
+  async sendPasswordReset(_email: string): Promise<void> {}
+  async signInAsGuest(): Promise<void> {}
 
   async signOut(): Promise<void> {
     this.userSubject.next(null);

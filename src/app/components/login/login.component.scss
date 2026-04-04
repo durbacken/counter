@@ -168,21 +168,34 @@
   color: var(--text-secondary);
   margin: 0 0 16px;
   text-align: center;
+  line-height: 1.5;
 }
 
-.link-sent .hint { margin-bottom: 8px; text-align: center; }
-
-.paste-section {
-  border-top: 1px solid var(--divider);
-  margin: 16px 0 8px;
-  padding-top: 16px;
+.bottom-links {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 4px;
 }
 
-.paste-label {
+.switch-link {
   font-size: 13px;
   color: var(--text-secondary);
-  margin: 0 0 12px;
-  text-align: left !important;
+  padding: 0 4px;
+}
+
+.switch-hint {
+  font-size: 13px;
+  color: var(--text-secondary);
+  text-align: center;
+  margin: 8px 0 0;
+
+  .switch-link-inline {
+    font-size: 13px;
+    font-weight: 500;
+    padding: 0 2px;
+    min-width: 0;
+    color: #1976d2;
+  }
 }
 
 .google-btn {

@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { Router } from '@angular/router';
-import { Auth, GoogleAuthProvider, User, authState, getRedirectResult, isSignInWithEmailLink, sendSignInLinkToEmail, signInAnonymously, signInWithEmailLink, signInWithPopup, signInWithRedirect, signOut } from '@angular/fire/auth';
+import { Auth, GoogleAuthProvider, User, authState, createUserWithEmailAndPassword, getRedirectResult, sendPasswordResetEmail, signInAnonymously, signInWithEmailAndPassword, signInWithPopup, signInWithRedirect, signOut } from '@angular/fire/auth';
 import { environment } from '../../environments/environment';
 import {
   Firestore, collection, doc, getDocs, query,
@@ -54,26 +54,20 @@ export class AuthService {
     return sessionStorage.getItem('googleRedirectPending') === '1';
   }
 
-  async sendMagicLink(email: string): Promise<void> {
-    await sendSignInLinkToEmail(this.auth, email, {
-      url: environment.appUrl + '/login',
-      handleCodeInApp: true,
-    });
-    localStorage.setItem('emailForSignIn', email);
-  }
-
-  async completeEmailLink(email: string, url = window.location.href): Promise<void> {
-    const result = await signInWithEmailLink(this.auth, email, url);
-    localStorage.removeItem('emailForSignIn');
+  async signInWithPassword(email: string, password: string): Promise<void> {
+    const result = await signInWithEmailAndPassword(this.auth, email, password);
     await this.onSignIn(result.user);
   }
 
-  isEmailLink(): boolean {
-    return isSignInWithEmailLink(this.auth, window.location.href);
+  async createAccount(email: string, password: string): Promise<void> {
+    const result = await createUserWithEmailAndPassword(this.auth, email, password);
+    await this.onSignIn(result.user);
   }
 
-  getSavedEmail(): string | null {
-    return localStorage.getItem('emailForSignIn');
+  async sendPasswordReset(email: string): Promise<void> {
+    await sendPasswordResetEmail(this.auth, email, {
+      url: environment.appUrl + '/login',
+    });
   }
 
   async signInAsGuest(): Promise<void> {

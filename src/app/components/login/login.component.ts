@@ -10,6 +10,8 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatIconModule } from '@angular/material/icon';
 import { AuthService } from '../../services/auth.service';
 
+type Mode = 'signin' | 'register' | 'forgot';
+
 @Component({
   selector: 'app-login',
   imports: [FormsModule, MatButtonModule, MatFormFieldModule, MatInputModule, MatProgressSpinnerModule, MatIconModule],
@@ -23,8 +25,16 @@ export class LoginComponent implements OnInit {
 
   loading = false;
   error = '';
+  mode: Mode = 'signin';
+  resetSent = false;
+  showPassword = false;
   featureHintVisible = false;
+  completingLink = false;
   readonly inAppBrowser = this.auth.isInAppBrowser();
+
+  emailInput = '';
+  passwordInput = '';
+
   private featureHintTimer: ReturnType<typeof setTimeout> | null = null;
 
   onFeatureCardClick(): void {
@@ -32,13 +42,6 @@ export class LoginComponent implements OnInit {
     this.featureHintVisible = true;
     this.featureHintTimer = setTimeout(() => { this.featureHintVisible = false; }, 2500);
   }
-
-  // Magic link states
-  emailInput = '';
-  linkSent = false;
-  needsEmailConfirm = false;   // opened link on different device
-  completingLink = false;
-  pastedLink = '';
 
   ngOnInit(): void {
     this.auth.user$.pipe(
@@ -55,19 +58,7 @@ export class LoginComponent implements OnInit {
       }
     });
 
-    if (this.auth.isEmailLink()) {
-      const saved = this.auth.getSavedEmail();
-      if (saved) {
-        this.completingLink = true;
-        this.auth.completeEmailLink(saved).catch(() => {
-          this.error = 'Inloggningslänken är ogiltig eller har gått ut. Försök igen.';
-          this.completingLink = false;
-        });
-      } else {
-        this.needsEmailConfirm = true;
-      }
-    } else if (this.auth.googleRedirectPending) {
-      // Returning from Google redirect (PWA flow)
+    if (this.auth.googleRedirectPending) {
       this.completingLink = true;
       this.auth.checkRedirectResult()
         .then(found => { if (!found) this.completingLink = false; })
@@ -75,6 +66,57 @@ export class LoginComponent implements OnInit {
           this.error = 'Inloggningen misslyckades. Försök igen.';
           this.completingLink = false;
         });
+    }
+  }
+
+  setMode(mode: Mode): void {
+    this.mode = mode;
+    this.error = '';
+    this.resetSent = false;
+    this.passwordInput = '';
+    this.showPassword = false;
+  }
+
+  async signIn(): Promise<void> {
+    const email = this.emailInput.trim();
+    if (!email || !this.passwordInput) return;
+    this.loading = true;
+    this.error = '';
+    try {
+      await this.auth.signInWithPassword(email, this.passwordInput);
+    } catch (e: any) {
+      this.error = this.friendlyError(e.code);
+    } finally {
+      this.loading = false;
+    }
+  }
+
+  async register(): Promise<void> {
+    const email = this.emailInput.trim();
+    if (!email || !this.passwordInput) return;
+    this.loading = true;
+    this.error = '';
+    try {
+      await this.auth.createAccount(email, this.passwordInput);
+    } catch (e: any) {
+      this.error = this.friendlyError(e.code);
+    } finally {
+      this.loading = false;
+    }
+  }
+
+  async sendReset(): Promise<void> {
+    const email = this.emailInput.trim();
+    if (!email) return;
+    this.loading = true;
+    this.error = '';
+    try {
+      await this.auth.sendPasswordReset(email);
+      this.resetSent = true;
+    } catch (e: any) {
+      this.error = this.friendlyError(e.code);
+    } finally {
+      this.loading = false;
     }
   }
 
@@ -89,19 +131,6 @@ export class LoginComponent implements OnInit {
     }
   }
 
-  async signInWithPastedLink(): Promise<void> {
-    const url = this.pastedLink.trim();
-    if (!url || !this.emailInput) return;
-    this.completingLink = true;
-    this.error = '';
-    try {
-      await this.auth.completeEmailLink(this.emailInput, url);
-    } catch {
-      this.error = 'Länken är ogiltig eller har gått ut. Försök igen.';
-      this.completingLink = false;
-    }
-  }
-
   async signInAsGuest(): Promise<void> {
     this.loading = true;
     this.error = '';
@@ -113,36 +142,22 @@ export class LoginComponent implements OnInit {
     }
   }
 
-  async sendMagicLink(): Promise<void> {
-    const email = this.emailInput.trim();
-    if (!email) return;
-    this.loading = true;
-    this.error = '';
-    try {
-      await this.auth.sendMagicLink(email);
-      this.linkSent = true;
-    } catch (e: any) {
-      if (e?.code === 'auth/quota-exceeded') {
-        this.error = 'För många inloggningsförsök idag. Försök igen imorgon eller logga in med Google.';
-      } else {
-        this.error = 'Kunde inte skicka länken. Kontrollera e-postadressen och försök igen.';
-      }
-    } finally {
-      this.loading = false;
-    }
-  }
-
-  async confirmEmailAndComplete(): Promise<void> {
-    const email = this.emailInput.trim();
-    if (!email) return;
-    this.completingLink = true;
-    this.error = '';
-    try {
-      await this.auth.completeEmailLink(email);
-    } catch {
-      this.error = 'Inloggningslänken är ogiltig eller har gått ut. Försök igen.';
-      this.completingLink = false;
-      this.needsEmailConfirm = false;
+  private friendlyError(code: string): string {
+    switch (code) {
+      case 'auth/invalid-credential':
+      case 'auth/wrong-password':
+      case 'auth/user-not-found':
+        return 'Fel e-postadress eller lösenord.';
+      case 'auth/email-already-in-use':
+        return 'Det finns redan ett konto med den e-postadressen.';
+      case 'auth/weak-password':
+        return 'Lösenordet måste vara minst 6 tecken.';
+      case 'auth/invalid-email':
+        return 'Ogiltig e-postadress.';
+      case 'auth/too-many-requests':
+        return 'För många försök. Vänta en stund och försök igen.';
+      default:
+        return 'Något gick fel. Försök igen.';
     }
   }
 }
