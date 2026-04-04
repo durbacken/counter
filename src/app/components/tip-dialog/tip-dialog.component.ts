@@ -36,25 +36,27 @@ interface TipDialogData {
           <p class="sent-sub">De får ett mail med en länk för att skapa konto direkt.</p>
         </div>
       } @else {
-        <p class="dialog-hint">Ange e-postadressen till den du vill tipsa. De får ett personligt mail från dig med en länk för att skapa konto direkt — inga extra steg.</p>
 
+        <!-- ─── Share link ──────────────────────────── -->
+        <p class="section-label">Dela med vem som helst</p>
+        <button mat-stroked-button class="share-btn" (click)="shareLink()">
+          <mat-icon>share</mat-icon>
+          Dela länk
+        </button>
+
+        <div class="divider"><span>eller tipsa direkt via e-post</span></div>
+
+        <!-- ─── Email tip ───────────────────────────── -->
+        <p class="section-label">Skicka personligt tips</p>
         <mat-form-field appearance="outline" class="email-field">
-          <mat-label>E-postadress</mat-label>
+          <mat-label>Mottagarens e-postadress</mat-label>
           <input matInput [(ngModel)]="toEmail" type="email" name="tip-email"
                  autocomplete="off" (keydown.enter)="send()"
-                 placeholder="namn&#64;exempel.se" autofocus />
+                 placeholder="namn&#64;exempel.se" />
         </mat-form-field>
-
         @if (error) {
           <p class="error">{{ error }}</p>
         }
-
-        <div class="share-row">
-          <button mat-stroked-button class="share-btn" (click)="shareLink()">
-            <mat-icon>share</mat-icon>
-            Dela länk
-          </button>
-        </div>
       }
     </mat-dialog-content>
     <mat-dialog-actions align="end">
@@ -64,33 +66,37 @@ interface TipDialogData {
                 [disabled]="!toEmail.trim() || sending"
                 (click)="send()">
           @if (sending) { <mat-spinner diameter="20" /> }
-          @else { Skicka tips }
+          @else { Skicka }
         </button>
       }
     </mat-dialog-actions>
   `,
   styles: [`
-    .dialog-hint {
-      font-size: 14px;
+    .section-label {
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
       color: var(--text-secondary);
-      margin: 0 0 20px;
-      line-height: 1.5;
+      margin: 0 0 10px;
+    }
+
+    .share-btn { width: 100%; }
+
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 20px 0;
+      color: var(--text-secondary);
+      font-size: 12px;
+
+      &::before, &::after { content: ''; flex: 1; height: 1px; background: var(--divider); }
     }
 
     .email-field { width: 100%; }
 
     .error { color: #c62828; font-size: 13px; margin: -8px 0 8px; }
-
-    .share-row {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin-top: 4px;
-      padding-top: 16px;
-      border-top: 1px solid var(--divider);
-    }
-
-    .share-btn { flex: 1; }
 
     .sent-state {
       display: flex;
