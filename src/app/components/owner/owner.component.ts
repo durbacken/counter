@@ -1,7 +1,7 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { DatePipe } from '@angular/common';
-import { Firestore, collection, collectionGroup, getDocs, orderBy, query } from '@angular/fire/firestore';
+import { Firestore, collection, collectionGroup, getDocs, query } from '@angular/fire/firestore';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -85,7 +85,7 @@ export class OwnerComponent implements OnInit {
       ]);
 
       const changesSnap = await getDocs(
-        query(collectionGroup(this.firestore, 'changes'), orderBy('timestamp', 'desc'))
+        query(collectionGroup(this.firestore, 'changes'))
       ).catch(() => null);
 
       const users: UserProfile[] = usersSnap.docs.map(d => ({
@@ -99,16 +99,19 @@ export class OwnerComponent implements OnInit {
         id: d.id,
       }));
 
-      // Build map of userEmail -> { lastActivityAt, workspaceId } from actual change history
+      // Build map of userEmail -> most recent { at, workspaceId } across all changes
       const lastActivityByEmail = new Map<string, { at: Date; workspaceId: string }>();
       for (const d of changesSnap?.docs ?? []) {
         const data = d.data();
         const email: string = data['userEmail'] ?? '';
-        if (!email || lastActivityByEmail.has(email)) continue; // already have most recent
+        if (!email) continue;
         const ts = data['timestamp'];
         const at: Date = ts?.toDate?.() ?? new Date(ts);
         const workspaceId = d.ref.parent.parent!.id;
-        lastActivityByEmail.set(email, { at, workspaceId });
+        const existing = lastActivityByEmail.get(email);
+        if (!existing || at.getTime() > existing.at.getTime()) {
+          lastActivityByEmail.set(email, { at, workspaceId });
+        }
       }
 
       // Build workspaceId -> title lookup
