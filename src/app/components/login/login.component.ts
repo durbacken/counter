@@ -99,7 +99,14 @@ export class LoginComponent implements OnInit {
     try {
       await this.auth.createAccount(email, this.passwordInput);
     } catch (e: any) {
-      this.error = this.friendlyError(e.code);
+      if (e.code === 'auth/email-already-in-use') {
+        // Account exists (possibly via Google or old magic link) — guide them
+        // to set a password via the reset flow, which works for all providers.
+        this.setMode('forgot');
+        this.error = 'Det finns redan ett konto med den adressen. Skicka en återställningslänk för att sätta ett lösenord.';
+      } else {
+        this.error = this.friendlyError(e.code);
+      }
     } finally {
       this.loading = false;
     }
