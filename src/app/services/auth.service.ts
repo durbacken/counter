@@ -31,12 +31,23 @@ export class AuthService {
     }
   }
 
-  async checkRedirectResult(): Promise<void> {
+  async checkRedirectResult(): Promise<boolean> {
     const result = await getRedirectResult(this.auth);
     sessionStorage.removeItem('googleRedirectPending');
     if (result?.user) {
       await this.onSignIn(result.user);
+      return true;
     }
+    return false;
+  }
+
+  isInAppBrowser(): boolean {
+    const ua = navigator.userAgent;
+    // Known in-app browser signals
+    if (/Instagram|FBAN|FBAV|LinkedInApp|WhatsApp|Snapchat|TikTok/i.test(ua)) return true;
+    // iOS in-app browser: has iPhone/iPad but is missing Safari token
+    if (/iPhone|iPad/i.test(ua) && !/Safari/i.test(ua)) return true;
+    return false;
   }
 
   get googleRedirectPending(): boolean {

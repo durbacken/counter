@@ -118,6 +118,21 @@
 /* ─── Auth states ────────────────────────────────────── */
 .error { color: #c62828; font-size: 14px; margin-bottom: 16px; }
 
+.inapp-warning {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  background: #fff8e1;
+  border: 1px solid #ffe082;
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin-bottom: 4px;
+  color: #5d4037;
+
+  mat-icon { flex-shrink: 0; color: #f9a825; margin-top: 1px; }
+  p { margin: 0; font-size: 14px; line-height: 1.45; }
+}
+
 .divider {
   display: flex;
   align-items: center;

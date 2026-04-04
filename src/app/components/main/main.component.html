@@ -1,12 +1,5 @@
 @if (workspace$ | async; as workspace) {
   @let changes = (changes$ | async) ?? [];
-  @if (isGuest$ | async) {
-    <div class="guest-banner">
-      <mat-icon>info_outline</mat-icon>
-      <span>Du provar som gäst — din data försvinner om du loggar ut.</span>
-      <button mat-flat-button (click)="goBack()">Skapa konto</button>
-    </div>
-  }
   <mat-toolbar color="primary" class="toolbar">
     <button mat-icon-button (click)="goBack()" aria-label="Tillbaka">
       <mat-icon>arrow_back</mat-icon>
@@ -53,6 +46,14 @@
       </button>
     }
   </mat-toolbar>
+
+  @if (isGuest$ | async) {
+    <div class="guest-banner">
+      <mat-icon>info_outline</mat-icon>
+      <span>Du provar som gäst — din data försvinner om du loggar ut.</span>
+      <button mat-flat-button (click)="goBack()">Skapa konto</button>
+    </div>
+  }
 
   <div class="page-wrapper">
   <div class="container">

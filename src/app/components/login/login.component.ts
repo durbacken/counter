@@ -24,6 +24,7 @@ export class LoginComponent implements OnInit {
   loading = false;
   error = '';
   featureHintVisible = false;
+  readonly inAppBrowser = this.auth.isInAppBrowser();
   private featureHintTimer: ReturnType<typeof setTimeout> | null = null;
 
   onFeatureCardClick(): void {
@@ -66,12 +67,14 @@ export class LoginComponent implements OnInit {
         this.needsEmailConfirm = true;
       }
     } else if (this.auth.googleRedirectPending) {
-      // Returning from Google redirect (iOS PWA flow)
+      // Returning from Google redirect (PWA flow)
       this.completingLink = true;
-      this.auth.checkRedirectResult().catch(() => {
-        this.error = 'Inloggningen misslyckades. Försök igen.';
-        this.completingLink = false;
-      });
+      this.auth.checkRedirectResult()
+        .then(found => { if (!found) this.completingLink = false; })
+        .catch(() => {
+          this.error = 'Inloggningen misslyckades. Försök igen.';
+          this.completingLink = false;
+        });
     }
   }
 
