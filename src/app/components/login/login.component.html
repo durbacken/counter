@@ -52,17 +52,27 @@
       @if (error) {
         <p class="error">{{ error }}</p>
       }
-      @if (signInFailed) {
+      @if (signInFailed && !inAppBrowser) {
         <div class="signin-failed-hint">
-          Har du loggat in med Google tidigare, eller glömt ditt lösenord?
-          <button mat-button color="primary" class="inline-reset-btn" (click)="setMode('forgot')">Återställ lösenord</button>
+          <p>Har du ett Google-konto? Logga in med Google-knappen ovan — det är enklare.</p>
+          <p>Annars: glömt lösenordet?
+            <button mat-button color="primary" class="inline-reset-btn" (click)="setMode('forgot')">Återställ lösenord</button>
+          </p>
         </div>
       }
 
       <!-- ─── Forgot password ─────────────────────── -->
       @if (mode === 'forgot') {
         @if (resetSent) {
-          <p class="hint">Ett återställningsmail har skickats till <strong>{{ emailInput }}</strong>. Klicka på länken i mailet för att välja nytt lösenord.</p>
+          <p class="hint">Ett återställningsmail har skickats till <strong>{{ emailInput }}</strong>.</p>
+          <div class="reset-sent-tips">
+            <p>Hittar du inte mailet?</p>
+            <ul>
+              <li>Kolla skräppost och fliken <strong>Kampanjer</strong> i Gmail</li>
+              <li>Mailet kommer från en Firebase-adress — kan se ut som skräppost</li>
+              <li>Har du ett Google-konto? Logga in med Google-knappen istället — snabbare och säkrare</li>
+            </ul>
+          </div>
           <button mat-button (click)="setMode('signin')">Tillbaka till inloggning</button>
         } @else {
           <p class="card-heading">Glömt lösenord?</p>

@@ -118,6 +118,18 @@
 /* ─── Auth states ────────────────────────────────────── */
 .error { color: #c62828; font-size: 14px; margin-bottom: 8px; }
 
+.reset-sent-tips {
+  background: var(--surface-variant, #f5f5f5);
+  border-radius: 10px;
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  font-size: 13px;
+  color: var(--text-secondary);
+
+  p { margin: 0 0 6px; font-weight: 500; }
+  ul { margin: 0; padding-left: 18px; line-height: 1.7; }
+}
+
 .signin-failed-hint {
   font-size: 13px;
   color: var(--text-secondary);
