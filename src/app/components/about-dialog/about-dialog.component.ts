@@ -3,6 +3,7 @@ import { Router } from '@angular/router';
 import { MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
+import { APP_VERSION } from '../../../environments/version';
 
 @Component({
   selector: 'app-about-dialog',
@@ -11,7 +12,7 @@ import { MatIconModule } from '@angular/material/icon';
     <mat-dialog-content class="about-content">
       <img src="icons/icon-192x192.png" class="about-logo" alt="Koll på läget?" />
       <h2 class="app-name">Koll på läget?</h2>
-      <p class="byline">&copy; {{ year }} Durbacken Design</p>
+      <p class="byline">&copy; {{ year }} Durbacken Design · {{ version }}</p>
 
       <p class="intro">
         Hej! Jag heter <strong>Tobias Sjöbeck</strong> och det är jag som
@@ -104,6 +105,7 @@ export class AboutDialogComponent {
   readonly ref = inject(MatDialogRef<AboutDialogComponent>);
   readonly router = inject(Router);
   readonly year = new Date().getFullYear();
+  readonly version = APP_VERSION;
   close(): void { this.ref.close(); }
   seeMore(): void { this.ref.close(); this.router.navigate(['/about']); }
 }

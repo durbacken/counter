@@ -1,3 +1,9 @@
+mat-toolbar {
+  padding-top: env(safe-area-inset-top);
+  height: auto !important;
+  min-height: 56px;
+}
+
 .toolbar-title {
   font-size: 18px;
   font-weight: 500;

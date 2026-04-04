@@ -55,6 +55,23 @@
     </div>
   }
 
+  @if ((workspace.mode ?? 'counter') === 'checkbox' && workspace.categories.length >= HIDE_CHECKED_THRESHOLD) {
+    <div class="progress-strip">
+      <div class="progress-strip-row">
+        <span class="progress-strip-label">{{ progressPct(workspace.categories) }}%, {{ checkedCount(workspace.categories) }} av {{ workspace.categories.length }} klara</span>
+        @if (!editMode) {
+          <button class="hide-checked-btn" (click)="hideChecked = !hideChecked"
+                  [class.active]="hideChecked"
+                  [attr.aria-label]="hideChecked ? 'Visa alla' : 'Dölj avklarade'">
+            <mat-icon>{{ hideChecked ? 'visibility' : 'visibility_off' }}</mat-icon>
+            {{ hideChecked ? 'Visa alla' : 'Dölj avklarade' }}
+          </button>
+        }
+      </div>
+      <mat-progress-bar class="progress-strip-bar" mode="determinate" [value]="progressPct(workspace.categories)" />
+    </div>
+  }
+
   <div class="page-wrapper">
   <div class="container">
 
@@ -148,7 +165,7 @@
       <!-- ─── Checkbox mode ─────────────────────────── -->
       @if ((workspace.mode ?? 'counter') === 'checkbox') {
         <div class="category-list" cdkDropList (cdkDropListDropped)="dropCategory($event, workspace.categories)">
-          @for (category of workspace.categories; track category.id; let last = $last) {
+          @for (category of visibleCategories(workspace.categories); track category.id; let last = $last) {
             <div cdkDrag [cdkDragDisabled]="!editMode">
               <div class="category-row checkbox-row">
                 @if (editMode && editingCategoryId === category.id) {
@@ -167,7 +184,8 @@
                   </div>
                 } @else if (editMode) {
                   <mat-icon class="drag-handle" cdkDragHandle>drag_indicator</mat-icon>
-                  <span class="category-name">{{ category.name }}</span>
+                  <mat-icon class="edit-checked-indicator">{{ category.checked ? 'check_box' : 'check_box_outline_blank' }}</mat-icon>
+                  <span class="category-name" [class.edit-checked]="category.checked">{{ category.name }}</span>
                   <div class="inline-row-actions">
                     <button mat-icon-button (click)="startInlineEdit(category)" aria-label="Redigera">
                       <mat-icon>edit</mat-icon>

@@ -130,6 +130,14 @@ export class MainComponent {
   }
 
   showExampleHint = false;
+  hideChecked = false;
+
+  readonly HIDE_CHECKED_THRESHOLD = 5;
+
+  visibleCategories(categories: Category[]): Category[] {
+    if (this.editMode) return categories;
+    return this.hideChecked ? categories.filter(c => !c.checked) : categories;
+  }
 
   // ─── Add categories panel ───────────────────────────────
   addPanelOpen = false;

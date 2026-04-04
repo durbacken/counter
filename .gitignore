@@ -52,3 +52,6 @@ package-lock.json
 
 # Local scratch notes (contains personal URLs and credentials)
 todo.txt
+
+# Auto-generated at build time
+src/environments/version.ts
