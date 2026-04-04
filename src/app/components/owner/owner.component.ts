@@ -1,7 +1,7 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { DatePipe } from '@angular/common';
-import { Firestore, collection, collectionGroup, getDocs, query } from '@angular/fire/firestore';
+import { Firestore, collection, getDocs } from '@angular/fire/firestore';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -84,10 +84,6 @@ export class OwnerComponent implements OnInit {
         getDocs(collection(this.firestore, 'workspaces')),
       ]);
 
-      const changesSnap = await getDocs(
-        query(collectionGroup(this.firestore, 'changes'))
-      ).catch(() => null);
-
       const users: UserProfile[] = usersSnap.docs.map(d => ({
         uid: d.id,
         email: d.data()['email'] ?? '',
@@ -99,20 +95,28 @@ export class OwnerComponent implements OnInit {
         id: d.id,
       }));
 
-      // Build map of userEmail -> most recent { at, workspaceId } across all changes
+      // Fetch changes for each workspace in parallel, build email -> most recent activity map
       const lastActivityByEmail = new Map<string, { at: Date; workspaceId: string }>();
-      for (const d of changesSnap?.docs ?? []) {
-        const data = d.data();
-        const email: string = data['userEmail'] ?? '';
-        if (!email) continue;
-        const ts = data['timestamp'];
-        const at: Date = ts?.toDate?.() ?? new Date(ts);
-        const workspaceId = d.ref.parent.parent!.id;
-        const existing = lastActivityByEmail.get(email);
-        if (!existing || at.getTime() > existing.at.getTime()) {
-          lastActivityByEmail.set(email, { at, workspaceId });
+      const allChangeSnaps = await Promise.all(
+        workspaces.map(ws =>
+          getDocs(collection(this.firestore, 'workspaces', ws.id, 'changes')).catch(() => null)
+        )
+      );
+      allChangeSnaps.forEach((snap, i) => {
+        if (!snap) return;
+        const workspaceId = workspaces[i].id;
+        for (const d of snap.docs) {
+          const data = d.data();
+          const email: string = data['userEmail'] ?? '';
+          if (!email) continue;
+          const ts = data['timestamp'];
+          const at: Date = ts?.toDate?.() ?? new Date(ts);
+          const existing = lastActivityByEmail.get(email);
+          if (!existing || at.getTime() > existing.at.getTime()) {
+            lastActivityByEmail.set(email, { at, workspaceId });
+          }
         }
-      }
+      });
 
       // Build workspaceId -> title lookup
       const wsTitle = new Map(workspaces.map(ws => [ws.id, ws.title]));
