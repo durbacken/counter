@@ -79,11 +79,14 @@ export class OwnerComponent implements OnInit {
   async load(): Promise<void> {
     this.loading = true;
     try {
-      const [usersSnap, workspacesSnap, changesSnap] = await Promise.all([
+      const [usersSnap, workspacesSnap] = await Promise.all([
         getDocs(collection(this.firestore, 'users')),
         getDocs(collection(this.firestore, 'workspaces')),
-        getDocs(query(collectionGroup(this.firestore, 'changes'), orderBy('timestamp', 'desc'))),
       ]);
+
+      const changesSnap = await getDocs(
+        query(collectionGroup(this.firestore, 'changes'), orderBy('timestamp', 'desc'))
+      ).catch(() => null);
 
       const users: UserProfile[] = usersSnap.docs.map(d => ({
         uid: d.id,
@@ -98,7 +101,7 @@ export class OwnerComponent implements OnInit {
 
       // Build map of userEmail -> { lastActivityAt, workspaceId } from actual change history
       const lastActivityByEmail = new Map<string, { at: Date; workspaceId: string }>();
-      for (const d of changesSnap.docs) {
+      for (const d of changesSnap?.docs ?? []) {
         const data = d.data();
         const email: string = data['userEmail'] ?? '';
         if (!email || lastActivityByEmail.has(email)) continue; // already have most recent
