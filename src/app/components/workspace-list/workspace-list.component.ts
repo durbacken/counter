@@ -12,6 +12,7 @@ import { AuthService } from '../../services/auth.service';
 import { WorkspaceService } from '../../services/workspace.service';
 import { AboutDialogComponent } from '../about-dialog/about-dialog.component';
 import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog.component';
+import { TipDialogComponent } from '../tip-dialog/tip-dialog.component';
 import { FooterComponent } from '../footer/footer.component';
 import { Category, Workspace, WorkspaceMode } from '../../models/counter.model';
 
@@ -238,6 +239,19 @@ export class WorkspaceListComponent implements OnInit, OnDestroy {
 
   openAbout(): void {
     this.dialog.open(AboutDialogComponent, { maxWidth: '380px' });
+  }
+
+  async openTip(): Promise<void> {
+    const user = await firstValueFrom(this.user$);
+    if (!user) return;
+    this.dialog.open(TipDialogComponent, {
+      maxWidth: '400px',
+      width: '92vw',
+      data: {
+        fromName: user.displayName || user.email?.split('@')[0] || 'En vän',
+        fromEmail: user.email ?? '',
+      }
+    });
   }
 
   signOut(): void {

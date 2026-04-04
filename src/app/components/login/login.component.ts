@@ -1,6 +1,6 @@
 import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { filter, take } from 'rxjs/operators';
 import { MatButtonModule } from '@angular/material/button';
@@ -21,6 +21,7 @@ type Mode = 'signin' | 'register' | 'forgot';
 export class LoginComponent implements OnInit {
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
   private readonly destroyRef = inject(DestroyRef);
 
   loading = false;
@@ -58,6 +59,12 @@ export class LoginComponent implements OnInit {
         this.router.navigate(['/']);
       }
     });
+
+    const tipEmail = this.route.snapshot.queryParamMap.get('email');
+    if (tipEmail) {
+      this.emailInput = tipEmail;
+      this.mode = 'register';
+    }
 
     if (this.auth.googleRedirectPending) {
       this.completingLink = true;

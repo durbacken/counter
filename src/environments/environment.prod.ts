@@ -11,6 +11,7 @@ export const environment = {
   emailjs: {
     serviceId: 'service_40kx9hy',
     templateId: 'template_cscc11g',
+    tipTemplateId: 'template_nsb38p6',
     publicKey: 'VzZDhS0ti7U6hjKqu'
   },
   appUrl: 'https://counter-durbacken.vercel.app'

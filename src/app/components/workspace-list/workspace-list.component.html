@@ -7,6 +7,11 @@
       </span>
     </button>
     <span class="spacer"></span>
+    @if (!user.isAnonymous) {
+      <button mat-icon-button (click)="openTip()" aria-label="Tipsa om appen">
+        <mat-icon>card_giftcard</mat-icon>
+      </button>
+    }
     <button mat-icon-button (click)="signOut()" aria-label="Logga ut">
       <mat-icon>logout</mat-icon>
     </button>
