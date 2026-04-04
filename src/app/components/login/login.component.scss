@@ -116,7 +116,24 @@
 }
 
 /* ─── Auth states ────────────────────────────────────── */
-.error { color: #c62828; font-size: 14px; margin-bottom: 16px; }
+.error { color: #c62828; font-size: 14px; margin-bottom: 8px; }
+
+.signin-failed-hint {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-bottom: 16px;
+  line-height: 1.5;
+
+  .inline-reset-btn {
+    display: block;
+    margin: 4px 0 0 -4px;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 0 4px;
+    height: auto;
+    line-height: 1.8;
+  }
+}
 
 .inapp-warning {
   display: flex;

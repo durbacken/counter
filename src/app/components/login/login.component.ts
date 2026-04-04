@@ -28,6 +28,7 @@ export class LoginComponent implements OnInit {
   mode: Mode = 'signin';
   resetSent = false;
   showPassword = false;
+  signInFailed = false;
   featureHintVisible = false;
   completingLink = false;
   readonly inAppBrowser = this.auth.isInAppBrowser();
@@ -73,6 +74,7 @@ export class LoginComponent implements OnInit {
     this.mode = mode;
     this.error = '';
     this.resetSent = false;
+    this.signInFailed = false;
     this.passwordInput = '';
     this.showPassword = false;
   }
@@ -82,10 +84,12 @@ export class LoginComponent implements OnInit {
     if (!email || !this.passwordInput) return;
     this.loading = true;
     this.error = '';
+    this.signInFailed = false;
     try {
       await this.auth.signInWithPassword(email, this.passwordInput);
     } catch (e: any) {
       this.error = this.friendlyError(e.code);
+      this.signInFailed = true;
     } finally {
       this.loading = false;
     }

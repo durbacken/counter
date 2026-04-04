@@ -52,6 +52,12 @@
       @if (error) {
         <p class="error">{{ error }}</p>
       }
+      @if (signInFailed) {
+        <div class="signin-failed-hint">
+          Har du loggat in med Google tidigare, eller glömt ditt lösenord?
+          <button mat-button color="primary" class="inline-reset-btn" (click)="setMode('forgot')">Återställ lösenord</button>
+        </div>
+      }
 
       <!-- ─── Forgot password ─────────────────────── -->
       @if (mode === 'forgot') {
