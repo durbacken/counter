@@ -4,6 +4,7 @@ import { SwUpdate } from '@angular/service-worker';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatIconModule } from '@angular/material/icon';
 import { InstallBannerComponent } from './components/install-banner/install-banner.component';
+import { interval } from 'rxjs';
 
 @Component({
   selector: 'app-root',
@@ -55,6 +56,8 @@ export class AppComponent implements OnInit, OnDestroy {
     window.addEventListener('offline', this.onOffline);
 
     if (isDevMode() || !this.swUpdate.isEnabled) return;
+
+    interval(15 * 60 * 1000).subscribe(() => this.swUpdate.checkForUpdate());
 
     this.swUpdate.versionUpdates.subscribe(event => {
       if (event.type === 'VERSION_READY') {
