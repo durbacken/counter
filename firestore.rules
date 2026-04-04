@@ -83,7 +83,7 @@ service cloud.firestore {
       // ── Change history ─────────────────────────────────────────────
       // Members can read and append. Nobody can edit or delete (immutable log).
       match /changes/{changeId} {
-        allow read: if isAuth() && isMember(workspaceId);
+        allow read: if (isAuth() && isMember(workspaceId)) || isAppOwner();
         allow create: if isAuth() &&
           isMember(workspaceId) &&
           request.resource.data.userId == uid();

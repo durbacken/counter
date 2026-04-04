@@ -1,7 +1,7 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { DatePipe } from '@angular/common';
-import { Firestore, collection, getDocs } from '@angular/fire/firestore';
+import { Firestore, collection, collectionGroup, getDocs, orderBy, query } from '@angular/fire/firestore';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -79,9 +79,10 @@ export class OwnerComponent implements OnInit {
   async load(): Promise<void> {
     this.loading = true;
     try {
-      const [usersSnap, workspacesSnap] = await Promise.all([
+      const [usersSnap, workspacesSnap, changesSnap] = await Promise.all([
         getDocs(collection(this.firestore, 'users')),
         getDocs(collection(this.firestore, 'workspaces')),
+        getDocs(query(collectionGroup(this.firestore, 'changes'), orderBy('timestamp', 'desc'))),
       ]);
 
       const users: UserProfile[] = usersSnap.docs.map(d => ({
@@ -95,25 +96,30 @@ export class OwnerComponent implements OnInit {
         id: d.id,
       }));
 
+      // Build map of userEmail -> { lastActivityAt, workspaceId } from actual change history
+      const lastActivityByEmail = new Map<string, { at: Date; workspaceId: string }>();
+      for (const d of changesSnap.docs) {
+        const data = d.data();
+        const email: string = data['userEmail'] ?? '';
+        if (!email || lastActivityByEmail.has(email)) continue; // already have most recent
+        const ts = data['timestamp'];
+        const at: Date = ts?.toDate?.() ?? new Date(ts);
+        const workspaceId = d.ref.parent.parent!.id;
+        lastActivityByEmail.set(email, { at, workspaceId });
+      }
+
+      // Build workspaceId -> title lookup
+      const wsTitle = new Map(workspaces.map(ws => [ws.id, ws.title]));
+
       this.totalWorkspaces = workspaces.length;
 
       this.stats = users.map(user => {
         const mine = workspaces.filter(ws => ws.members?.includes(user.uid));
         const ownerOf = mine.filter(ws => ws.ownerId === user.uid).length;
 
-        // Find the most recent workspace where this user personally made a change
-        const myChanges = workspaces
-          .filter(ws => ws.lastActivityBy === user.email && ws.lastActivityAt)
-          .sort((a, b) => {
-            const ta = a.lastActivityAt?.toDate?.() ?? new Date(a.lastActivityAt);
-            const tb = b.lastActivityAt?.toDate?.() ?? new Date(b.lastActivityAt);
-            return tb.getTime() - ta.getTime();
-          });
-
-        const lastWs = myChanges[0] ?? null;
-        const lastActivityAt = lastWs
-          ? (lastWs.lastActivityAt?.toDate?.() ?? new Date(lastWs.lastActivityAt))
-          : null;
+        const activity = lastActivityByEmail.get(user.email) ?? null;
+        const lastActivityAt = activity?.at ?? null;
+        const lastActivityWorkspace = activity ? (wsTitle.get(activity.workspaceId) ?? null) : null;
 
         const workspaceSummaries: WorkspaceSummary[] = mine
           .map(ws => ({
@@ -138,7 +144,7 @@ export class OwnerComponent implements OnInit {
           ownerOf,
           memberOf: mine.length - ownerOf,
           lastActivityAt,
-          lastActivityWorkspace: lastWs?.title ?? null,
+          lastActivityWorkspace,
           workspaces: workspaceSummaries,
         };
       }).sort((a, b) => {
