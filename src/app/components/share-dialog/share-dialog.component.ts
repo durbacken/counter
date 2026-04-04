@@ -3,7 +3,6 @@ import { FormsModule } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatDividerModule } from '@angular/material/divider';
@@ -26,7 +25,6 @@ interface ShareDialogData {
     MatDialogModule,
     MatButtonModule,
     MatIconModule,
-    MatSlideToggleModule,
     MatFormFieldModule,
     MatInputModule,
     MatDividerModule,
@@ -35,36 +33,10 @@ interface ShareDialogData {
     <h2 mat-dialog-title>Dela</h2>
     <mat-dialog-content>
 
-      <!-- ─── Delad länk ─────────────────────────────── -->
-      <div class="share-section">
-        <p class="section-label">Delad länk</p>
-        @if (data.canManage) {
-          <mat-slide-toggle [checked]="isPublic" (change)="togglePublic()">
-            Aktivera delningslänk
-          </mat-slide-toggle>
-        }
-        @if (isPublic) {
-          <div class="link-row">
-            <span class="link-text">{{ shareUrl }}</span>
-            <button mat-icon-button (click)="copyLink()" aria-label="Kopiera länk">
-              <mat-icon>content_copy</mat-icon>
-            </button>
-          </div>
-          <p class="link-hint">
-            <mat-icon class="hint-icon">info</mat-icon>
-            Vem som helst med länken kan se denna {{ data.workspace.mode === 'checkbox' ? 'checklista' : 'räknare' }} utan att logga in.
-          </p>
-        } @else if (!data.canManage) {
-          <p class="link-hint muted">Ägaren har inte aktiverat delningslänk för denna {{ data.workspace.mode === 'checkbox' ? 'checklista' : 'räknare' }}.</p>
-        }
-      </div>
-
-      <mat-divider />
-
-      <!-- ─── Inbjudningslänk ───────────────────────── -->
+      <!-- ─── Bjud in med länk ─────────────────────── -->
       @if (data.canManage) {
         <div class="share-section">
-          <p class="section-label">Inbjudningslänk</p>
+          <p class="section-label">Bjud in med länk</p>
           @if (inviteToken) {
             <div class="link-row">
               <span class="link-text">{{ inviteLinkUrl }}</span>
@@ -76,12 +48,12 @@ interface ShareDialogData {
           <div class="invite-link-actions">
             <button mat-stroked-button [disabled]="generatingToken" (click)="generateAndCopyInviteLink()">
               <mat-icon>{{ inviteToken ? 'refresh' : 'link' }}</mat-icon>
-              {{ inviteToken ? 'Skapa ny länk' : 'Skapa inbjudningslänk' }}
+              {{ inviteToken ? 'Skapa ny länk' : 'Skapa länk' }}
             </button>
           </div>
           <p class="link-hint muted">
             <mat-icon class="hint-icon">group</mat-icon>
-            Vem som helst med länken kan gå med som fullvärdig medlem — räkna, bocka av och se historik.
+            Vem som helst med länken kan gå med och delta aktivt.
           </p>
         </div>
 
@@ -202,28 +174,13 @@ export class ShareDialogComponent {
   private readonly snackBar = inject(MatSnackBar);
   private readonly clipboard = inject(Clipboard);
 
-  isPublic = this.data.workspace.isPublic ?? false;
   inviteToken = this.data.workspace.inviteToken ?? '';
   generatingToken = false;
   inviteEmail = '';
   inviting = false;
 
-  get shareUrl(): string {
-    return `${window.location.origin}/view/${this.data.workspaceId}`;
-  }
-
   get inviteLinkUrl(): string {
     return `${window.location.origin}/join/${this.data.workspaceId}/${this.inviteToken}`;
-  }
-
-  togglePublic(): void {
-    this.isPublic = !this.isPublic;
-    this.workspaceService.setPublic(this.data.workspaceId, this.isPublic);
-  }
-
-  copyLink(): void {
-    this.clipboard.copy(this.shareUrl);
-    this.snackBar.open('Länk kopierad!', undefined, { duration: 2500 });
   }
 
   async generateAndCopyInviteLink(): Promise<void> {
