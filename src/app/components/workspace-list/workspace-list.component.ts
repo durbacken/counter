@@ -254,6 +254,19 @@ export class WorkspaceListComponent implements OnInit, OnDestroy {
     });
   }
 
+  private readonly ADMIN_EMAILS = [
+    'tobias.sjobeck@gmail.com',
+    'tobias.sjobeck@4cstrategies.com',
+  ];
+
+  isAdmin(email: string | null): boolean {
+    return !!email && this.ADMIN_EMAILS.includes(email);
+  }
+
+  goToAdmin(): void {
+    this.router.navigate(['/owner']);
+  }
+
   async signOut(): Promise<void> {
     const user = await firstValueFrom(this.user$);
     const isGuest = user?.isAnonymous ?? false;

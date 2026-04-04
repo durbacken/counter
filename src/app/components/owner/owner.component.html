@@ -1,0 +1,75 @@
+<mat-toolbar color="primary">
+  <button mat-icon-button (click)="goBack()" aria-label="Tillbaka">
+    <mat-icon>arrow_back</mat-icon>
+  </button>
+  <span class="toolbar-title">Admin</span>
+  <span class="spacer"></span>
+  <button mat-icon-button (click)="load()" [disabled]="loading" aria-label="Uppdatera">
+    <mat-icon>refresh</mat-icon>
+  </button>
+</mat-toolbar>
+
+<div class="container">
+
+  @if (loading) {
+    <div class="loading-state">
+      <mat-spinner diameter="40" />
+    </div>
+  } @else {
+    <div class="summary-row">
+      <div class="summary-chip">
+        <span class="summary-value">{{ stats.length }}</span>
+        <span class="summary-label">användare</span>
+      </div>
+      <div class="summary-chip">
+        <span class="summary-value">{{ totalWorkspaces }}</span>
+        <span class="summary-label">workspaces</span>
+      </div>
+      @if (refreshedAt) {
+        <span class="refreshed-at">Uppdaterad {{ refreshedAt | date:'HH:mm:ss' }}</span>
+      }
+    </div>
+
+    <div class="user-list">
+      @for (s of stats; track s.uid) {
+        <mat-card class="user-card">
+          <mat-card-content>
+            <div class="user-header">
+              <div class="user-avatar">{{ (s.displayName || s.email).charAt(0).toUpperCase() }}</div>
+              <div class="user-info">
+                <span class="user-name">{{ s.displayName || s.email.split('@')[0] }}</span>
+                <span class="user-email">{{ s.email }}</span>
+              </div>
+              <div class="user-activity-badge" [class.active]="s.lastActivityAt">
+                {{ timeAgo(s.lastActivityAt) }}
+              </div>
+            </div>
+
+            <div class="user-stats">
+              <div class="stat">
+                <span class="stat-value">{{ s.totalWorkspaces }}</span>
+                <span class="stat-label">ws totalt</span>
+              </div>
+              <div class="stat">
+                <span class="stat-value">{{ s.ownerOf }}</span>
+                <span class="stat-label">ägare</span>
+              </div>
+              <div class="stat">
+                <span class="stat-value">{{ s.memberOf }}</span>
+                <span class="stat-label">medlem</span>
+              </div>
+            </div>
+
+            @if (s.lastActivityWorkspace) {
+              <p class="last-activity-ws">
+                <mat-icon class="activity-icon">history</mat-icon>
+                {{ s.lastActivityWorkspace }}
+              </p>
+            }
+          </mat-card-content>
+        </mat-card>
+      }
+    </div>
+  }
+
+</div>

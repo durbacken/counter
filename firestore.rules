@@ -23,6 +23,13 @@ service cloud.firestore {
       return wsData(workspaceId).ownerId == uid();
     }
 
+    function isAppOwner() {
+      return request.auth.token.email in [
+        'tobias.sjobeck@gmail.com',
+        'tobias.sjobeck@4cstrategies.com'
+      ];
+    }
+
     // True when the current user is joining a workspace using a valid invite token.
     // Only the members and memberEmails fields may change, and the user may only
     // add themselves (not remove anyone or change anything else).
@@ -51,7 +58,8 @@ service cloud.firestore {
       // Use resource.data directly (not get()) so list queries pass rule validation.
       allow read: if (isAuth() && uid() in resource.data.members) ||
                      resource.data.isPublic == true ||
-                     (isAuth() && 'inviteToken' in resource.data && resource.data.inviteToken != '');
+                     (isAuth() && 'inviteToken' in resource.data && resource.data.inviteToken != '') ||
+                     isAppOwner();
 
       // Any signed-in user can create a workspace they own.
       allow create: if isAuth() &&

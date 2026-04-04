@@ -42,6 +42,12 @@ export const routes: Routes = [
       import('./components/join/join.component').then(m => m.JoinComponent)
   },
   {
+    path: 'owner',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./components/owner/owner.component').then(m => m.OwnerComponent)
+  },
+  {
     path: 'about',
     loadComponent: () =>
       import('./components/about-page/about-page.component').then(m => m.AboutPageComponent)
