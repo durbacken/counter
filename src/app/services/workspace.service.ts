@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import {
   Firestore, collection, doc, addDoc, updateDoc, deleteDoc,
   docData, collectionData, query, where, getDocs, getDoc,
-  runTransaction, arrayUnion, arrayRemove, serverTimestamp, orderBy
+  runTransaction, arrayUnion, arrayRemove, serverTimestamp, orderBy, writeBatch
 } from '@angular/fire/firestore';
 import { Observable } from 'rxjs';
 // emailjs is dynamically imported in shareWithEmail to keep it out of the initial bundle
@@ -222,6 +222,12 @@ export class WorkspaceService {
   }
 
   async deleteWorkspace(workspaceId: string): Promise<void> {
+    const changesSnap = await getDocs(collection(this.firestore, 'workspaces', workspaceId, 'changes'));
+    if (!changesSnap.empty) {
+      const batch = writeBatch(this.firestore);
+      changesSnap.docs.forEach(d => batch.delete(d.ref));
+      await batch.commit();
+    }
     await deleteDoc(doc(this.firestore, 'workspaces', workspaceId));
   }
 
