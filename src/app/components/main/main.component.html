@@ -1,5 +1,12 @@
 @if (workspace$ | async; as workspace) {
   @let changes = (changes$ | async) ?? [];
+  @if (isGuest$ | async) {
+    <div class="guest-banner">
+      <mat-icon>info_outline</mat-icon>
+      <span>Du provar som gäst — din data försvinner om du loggar ut.</span>
+      <button mat-flat-button (click)="goBack()">Skapa konto</button>
+    </div>
+  }
   <mat-toolbar color="primary" class="toolbar">
     <button mat-icon-button (click)="goBack()" aria-label="Tillbaka">
       <mat-icon>arrow_back</mat-icon>
@@ -12,36 +19,38 @@
       <mat-icon>share</mat-icon>
     </button>
     @let canSettings = canAccessSettings$ | async;
-    @if (hasValues(workspace) || canSettings) {
-      <button mat-icon-button [matMenuTriggerFor]="overflowMenu" aria-label="Mer">
-        <mat-icon>more_vert</mat-icon>
+    @if (hasValues(workspace)) {
+      <button mat-icon-button [matMenuTriggerFor]="overflowMenu" aria-label="Inställningar">
+        <mat-icon>settings</mat-icon>
       </button>
       <mat-menu #overflowMenu="matMenu">
-        @if (hasValues(workspace)) {
-          <button mat-menu-item (click)="confirmReset()">
-            <mat-icon>restart_alt</mat-icon>
-            Nollställ
+        <button mat-menu-item (click)="confirmReset()">
+          <mat-icon>restart_alt</mat-icon>
+          Nollställ
+        </button>
+        <mat-divider />
+        <button mat-menu-item (click)="exportPng()">
+          <mat-icon>image</mat-icon>
+          Exportera bild (PNG)
+        </button>
+        @if (workspace.enableHistory) {
+          <button mat-menu-item (click)="exportXls()">
+            <mat-icon>table_chart</mat-icon>
+            Exportera historik (XLS)
           </button>
-          <mat-divider />
-          <button mat-menu-item (click)="exportPng()">
-            <mat-icon>image</mat-icon>
-            Exportera bild (PNG)
-          </button>
-          @if (workspace.enableHistory) {
-            <button mat-menu-item (click)="exportXls()">
-              <mat-icon>table_chart</mat-icon>
-              Exportera historik (XLS)
-            </button>
-          }
-          @if (canSettings) { <mat-divider /> }
         }
         @if (canSettings) {
+          <mat-divider />
           <button mat-menu-item (click)="goToAdmin()">
             <mat-icon>settings</mat-icon>
             Inställningar
           </button>
         }
       </mat-menu>
+    } @else if (canSettings) {
+      <button mat-icon-button (click)="goToAdmin()" aria-label="Inställningar">
+        <mat-icon>settings</mat-icon>
+      </button>
     }
   </mat-toolbar>
 

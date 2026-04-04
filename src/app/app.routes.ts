@@ -37,6 +37,11 @@ export const routes: Routes = [
       import('./components/workspace-view/workspace-view.component').then(m => m.WorkspaceViewComponent)
   },
   {
+    path: 'join/:id/:token',
+    loadComponent: () =>
+      import('./components/join/join.component').then(m => m.JoinComponent)
+  },
+  {
     path: 'about',
     loadComponent: () =>
       import('./components/about-page/about-page.component').then(m => m.AboutPageComponent)

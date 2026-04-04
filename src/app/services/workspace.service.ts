@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import {
   Firestore, collection, doc, addDoc, updateDoc, deleteDoc,
-  docData, collectionData, query, where, getDocs,
+  docData, collectionData, query, where, getDocs, getDoc,
   runTransaction, arrayUnion, arrayRemove, serverTimestamp, orderBy
 } from '@angular/fire/firestore';
 import { Observable } from 'rxjs';
@@ -203,6 +203,24 @@ export class WorkspaceService {
     await updateDoc(doc(this.firestore, 'workspaces', workspaceId), { isPublic });
   }
 
+  async generateInviteToken(workspaceId: string): Promise<string> {
+    const token = crypto.randomUUID();
+    await updateDoc(doc(this.firestore, 'workspaces', workspaceId), { inviteToken: token });
+    return token;
+  }
+
+  async joinWorkspace(workspaceId: string, token: string, uid: string, email: string): Promise<void> {
+    const snap = await getDoc(doc(this.firestore, 'workspaces', workspaceId));
+    if (!snap.exists() || snap.data()['inviteToken'] !== token) {
+      throw new Error('Ogiltig eller utgången inbjudan.');
+    }
+    if ((snap.data()['members'] as string[]).includes(uid)) return; // already a member
+    await updateDoc(doc(this.firestore, 'workspaces', workspaceId), {
+      members: arrayUnion(uid),
+      [`memberEmails.${uid}`]: email,
+    });
+  }
+
   async deleteWorkspace(workspaceId: string): Promise<void> {
     await deleteDoc(doc(this.firestore, 'workspaces', workspaceId));
   }
@@ -215,8 +233,8 @@ export class WorkspaceService {
     return collectionData(q, { idField: 'id' }) as Observable<ChangeEvent[]>;
   }
 
-  async logChange(workspaceId: string, event: Omit<ChangeEvent, 'id' | 'timestamp'>): Promise<void> {
-    await addDoc(
+  async logChange(workspaceId: string, event: Omit<ChangeEvent, 'id' | 'timestamp'>): Promise<string> {
+    const ref = await addDoc(
       collection(this.firestore, 'workspaces', workspaceId, 'changes'),
       { ...event, timestamp: serverTimestamp() }
     );
@@ -224,5 +242,13 @@ export class WorkspaceService {
       lastActivityAt: serverTimestamp(),
       lastActivityBy: event.userEmail,
     });
+    return ref.id;
+  }
+
+  async addComment(workspaceId: string, changeId: string, comment: string): Promise<void> {
+    await updateDoc(
+      doc(this.firestore, 'workspaces', workspaceId, 'changes', changeId),
+      { comment }
+    );
   }
 }

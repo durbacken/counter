@@ -60,7 +60,10 @@ export class WorkspaceListComponent implements OnInit, OnDestroy {
   showExamplePicker = false;
   showArchived = false;
 
+  private refreshTimer?: ReturnType<typeof setInterval>;
+
   ngOnInit(): void {
+    this.refreshTimer = setInterval(() => {}, 60_000);
     window.addEventListener('beforeinstallprompt', this.onBeforeInstall);
     window.addEventListener('appinstalled', () => { this.installPrompt = null; });
 
@@ -73,6 +76,7 @@ export class WorkspaceListComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    clearInterval(this.refreshTimer);
     window.removeEventListener('beforeinstallprompt', this.onBeforeInstall);
     if (this.featureHintTimer) clearTimeout(this.featureHintTimer);
   }

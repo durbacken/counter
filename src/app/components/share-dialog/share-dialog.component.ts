@@ -61,6 +61,33 @@ interface ShareDialogData {
 
       <mat-divider />
 
+      <!-- ─── Inbjudningslänk ───────────────────────── -->
+      @if (data.canManage) {
+        <div class="share-section">
+          <p class="section-label">Inbjudningslänk</p>
+          @if (inviteToken) {
+            <div class="link-row">
+              <span class="link-text">{{ inviteLinkUrl }}</span>
+              <button mat-icon-button (click)="copyInviteLink()" aria-label="Kopiera inbjudningslänk">
+                <mat-icon>content_copy</mat-icon>
+              </button>
+            </div>
+          }
+          <div class="invite-link-actions">
+            <button mat-stroked-button [disabled]="generatingToken" (click)="generateAndCopyInviteLink()">
+              <mat-icon>{{ inviteToken ? 'refresh' : 'link' }}</mat-icon>
+              {{ inviteToken ? 'Skapa ny länk' : 'Skapa inbjudningslänk' }}
+            </button>
+          </div>
+          <p class="link-hint muted">
+            <mat-icon class="hint-icon">group</mat-icon>
+            Vem som helst med länken kan gå med som fullvärdig medlem — räkna, bocka av och se historik.
+          </p>
+        </div>
+
+        <mat-divider />
+      }
+
       <!-- ─── Bjud in ────────────────────────────────── -->
       <div class="share-section">
         <p class="section-label">Bjud in via e-post</p>
@@ -81,8 +108,8 @@ interface ShareDialogData {
           </button>
         </div>
         <p class="link-hint muted">
-          <mat-icon class="hint-icon">group</mat-icon>
-          Inbjudna kan logga in och delta aktivt — räkna, bocka av och se historik. Till skillnad från delningslänken som bara ger läsåtkomst utan inloggning.
+          <mat-icon class="hint-icon">email</mat-icon>
+          Bjud in med e-post om du vill nå en specifik person.
         </p>
       </div>
 
@@ -161,6 +188,11 @@ interface ShareDialogData {
       height: 56px;
       flex-shrink: 0;
     }
+
+    .invite-link-actions {
+      display: flex;
+      gap: 8px;
+    }
   `]
 })
 export class ShareDialogComponent {
@@ -171,11 +203,17 @@ export class ShareDialogComponent {
   private readonly clipboard = inject(Clipboard);
 
   isPublic = this.data.workspace.isPublic ?? false;
+  inviteToken = this.data.workspace.inviteToken ?? '';
+  generatingToken = false;
   inviteEmail = '';
   inviting = false;
 
   get shareUrl(): string {
     return `${window.location.origin}/view/${this.data.workspaceId}`;
+  }
+
+  get inviteLinkUrl(): string {
+    return `${window.location.origin}/join/${this.data.workspaceId}/${this.inviteToken}`;
   }
 
   togglePublic(): void {
@@ -186,6 +224,22 @@ export class ShareDialogComponent {
   copyLink(): void {
     this.clipboard.copy(this.shareUrl);
     this.snackBar.open('Länk kopierad!', undefined, { duration: 2500 });
+  }
+
+  async generateAndCopyInviteLink(): Promise<void> {
+    this.generatingToken = true;
+    try {
+      this.inviteToken = await this.workspaceService.generateInviteToken(this.data.workspaceId);
+      this.clipboard.copy(this.inviteLinkUrl);
+      this.snackBar.open('Inbjudningslänk kopierad!', undefined, { duration: 2500 });
+    } finally {
+      this.generatingToken = false;
+    }
+  }
+
+  copyInviteLink(): void {
+    this.clipboard.copy(this.inviteLinkUrl);
+    this.snackBar.open('Inbjudningslänk kopierad!', undefined, { duration: 2500 });
   }
 
   async inviteMember(): Promise<void> {

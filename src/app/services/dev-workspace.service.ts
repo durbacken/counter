@@ -153,6 +153,21 @@ export class DevWorkspaceService {
     this.patchWorkspace(workspaceId, { isPublic });
   }
 
+  async generateInviteToken(workspaceId: string): Promise<string> {
+    const token = crypto.randomUUID();
+    this.patchWorkspace(workspaceId, { inviteToken: token });
+    return token;
+  }
+
+  async joinWorkspace(workspaceId: string, token: string, uid: string, email: string): Promise<void> {
+    const ws = this.ws$.value[workspaceId];
+    if (!ws || ws.inviteToken !== token) throw new Error('Ogiltig eller utgången inbjudan.');
+    if (ws.members.includes(uid)) return;
+    const members = [...ws.members, uid];
+    const memberEmails = { ...ws.memberEmails, [uid]: email };
+    this.patchWorkspace(workspaceId, { members, memberEmails });
+  }
+
   async deleteWorkspace(workspaceId: string): Promise<void> {
     const ws = { ...this.ws$.value };
     delete ws[workspaceId];
@@ -177,7 +192,7 @@ export class DevWorkspaceService {
     );
   }
 
-  async logChange(workspaceId: string, event: Omit<ChangeEvent, 'id' | 'timestamp'>): Promise<void> {
+  async logChange(workspaceId: string, event: Omit<ChangeEvent, 'id' | 'timestamp'>): Promise<string> {
     const ch = { ...this.ch$.value };
     const entry: ChangeEvent = {
       ...event,
@@ -190,5 +205,14 @@ export class DevWorkspaceService {
       lastActivityAt: new Date().toISOString() as any,
       lastActivityBy: event.userEmail,
     });
+    return entry.id;
+  }
+
+  async addComment(workspaceId: string, changeId: string, comment: string): Promise<void> {
+    const ch = { ...this.ch$.value };
+    ch[workspaceId] = (ch[workspaceId] ?? []).map(c =>
+      c.id === changeId ? { ...c, comment } : c
+    );
+    this.saveCh(ch);
   }
 }

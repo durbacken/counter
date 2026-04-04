@@ -33,6 +33,8 @@ export interface Workspace {
   lastActivityBy?: string;
   /** Timestamp of the last change (set on every logChange call). */
   lastActivityAt?: any;
+  /** Token granting anyone with the link full membership. */
+  inviteToken?: string;
 }
 
 export interface UserProfile {

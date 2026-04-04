@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit, ViewChild, inject, signal } from '@angular/core';
+import { Component, DestroyRef, OnDestroy, OnInit, ViewChild, inject, signal } from '@angular/core';
 import { AsyncPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -66,6 +66,27 @@ export class UndoSnackbarComponent implements OnInit, OnDestroy {
 }
 
 @Component({
+  selector: 'app-comment-snackbar',
+  standalone: true,
+  imports: [],
+  template: `
+    <span class="snack-msg">Vill du lägga till en anteckning?</span>
+    <span class="snack-actions">
+      <button class="snack-btn snack-add" (click)="ref.dismissWithAction()">Lägg till</button>
+      <button class="snack-btn snack-dismiss" (click)="ref.dismiss()" aria-label="Stäng">✕</button>
+    </span>
+  `,
+  styles: [`:host { display:flex; align-items:center; justify-content:space-between; width:100%; gap:8px; box-sizing:border-box; }
+    .snack-msg { flex:1; font-size:14px; }
+    .snack-actions { display:flex; align-items:center; flex-shrink:0; gap:2px; }
+    .snack-btn { background:none; border:none; color:inherit; cursor:pointer; font-size:14px; font-weight:500; letter-spacing:.04em; text-transform:uppercase; padding:0 8px; line-height:1; font-family:inherit; }
+    .snack-dismiss { font-size:16px; text-transform:none; letter-spacing:0; padding:0 4px; opacity:0.7; }`]
+})
+export class CommentSnackbarComponent {
+  readonly ref = inject(MatSnackBarRef);
+}
+
+@Component({
   selector: 'app-main',
   imports: [
     AsyncPipe,
@@ -96,8 +117,17 @@ export class MainComponent {
   private readonly auth = inject(AuthService);
   private readonly dialog = inject(MatDialog);
   private readonly snackBar = inject(MatSnackBar);
+  private readonly destroyRef = inject(DestroyRef);
 
   @ViewChild(ChartComponent) private chartComponent?: ChartComponent;
+
+  constructor() {
+    const timer = setInterval(() => {}, 60_000);
+    this.destroyRef.onDestroy(() => {
+      clearInterval(timer);
+      this.snackBar.dismiss();
+    });
+  }
 
   showExampleHint = false;
 
@@ -163,6 +193,8 @@ export class MainComponent {
     switchMap(params => this.workspaceService.getWorkspace(params.get('id')!))
   );
 
+  readonly isGuest$ = this.auth.user$.pipe(map(user => !!user?.isAnonymous));
+
   readonly isOwner$ = combineLatest([this.workspace$, this.auth.user$]).pipe(
     map(([workspace, user]) => !!user && workspace?.ownerId === user.uid)
   );
@@ -187,13 +219,26 @@ export class MainComponent {
 
   // ─── Undo snackbar ──────────────────────────────────────
 
-  private showUndoSnackbar(category: Category, action: 'increment' | 'decrement' | 'toggle'): void {
+  private showUndoSnackbar(
+    category: Category,
+    action: 'increment' | 'decrement' | 'toggle',
+    openComment?: () => void,
+  ): void {
     this.lastUndoAction = { categoryId: category.id, action };
     const ref = this.snackBar.openFromComponent(UndoSnackbarComponent, {
       data: { message: `${category.name} ändrad` },
       duration: 8000,
     });
     ref.onAction().subscribe(() => this.undoLastAction());
+    if (openComment) {
+      ref.afterDismissed().subscribe(({ dismissedByAction }) => {
+        if (dismissedByAction) return; // user tapped Ångra — don't offer comment
+        const commentRef = this.snackBar.openFromComponent(CommentSnackbarComponent, {
+          duration: 0, // stays until dismissed
+        });
+        commentRef.onAction().subscribe(() => openComment());
+      });
+    }
   }
 
   private async undoLastAction(): Promise<void> {
@@ -218,8 +263,9 @@ export class MainComponent {
     const prev = category.count;
     const next = prev + 1;
     await this.workspaceService.increment(this.workspaceId, category.id);
-    await this.promptAndLog(category, 'increment', prev, next, `Räknaren ökas: ${prev} → ${next}`);
-    this.showUndoSnackbar(category, 'increment');
+    const { changeId, enableComments } = await this.promptAndLog(category, 'increment', prev, next);
+    this.showUndoSnackbar(category, 'increment',
+      enableComments && changeId ? () => this.openCommentDialog(category, changeId) : undefined);
   }
 
   async decrement(category: Category): Promise<void> {
@@ -228,8 +274,9 @@ export class MainComponent {
     const prev = category.count;
     const next = Math.max(0, prev - 1);
     await this.workspaceService.decrement(this.workspaceId, category.id);
-    await this.promptAndLog(category, 'decrement', prev, next, `Räknaren minskas: ${prev} → ${next}`);
-    this.showUndoSnackbar(category, 'decrement');
+    const { changeId, enableComments } = await this.promptAndLog(category, 'decrement', prev, next);
+    this.showUndoSnackbar(category, 'decrement',
+      enableComments && changeId ? () => this.openCommentDialog(category, changeId) : undefined);
   }
 
   resetCategory(category: Category): void {
@@ -241,12 +288,20 @@ export class MainComponent {
       const prev = category.count;
       this.lastUndoAction = { categoryId: category.id, action: 'reset-category', previousCount: prev };
       await this.workspaceService.setCategoryCount(this.workspaceId, category.id, 0);
-      await this.promptAndLog(category, 'decrement', prev, 0, `Nollställd: ${prev} → 0`);
+      const { changeId, enableComments } = await this.promptAndLog(category, 'decrement', prev, 0);
+      const openComment = enableComments && changeId ? () => this.openCommentDialog(category, changeId) : undefined;
       const ref = this.snackBar.openFromComponent(UndoSnackbarComponent, {
         data: { message: `${category.name} nollställd` },
         duration: 8000,
       });
       ref.onAction().subscribe(() => this.undoLastAction());
+      if (openComment) {
+        ref.afterDismissed().subscribe(({ dismissedByAction }) => {
+          if (dismissedByAction) return;
+          const commentRef = this.snackBar.openFromComponent(CommentSnackbarComponent, { duration: 0 });
+          commentRef.onAction().subscribe(() => openComment());
+        });
+      }
     });
   }
 
@@ -254,14 +309,14 @@ export class MainComponent {
     navigator.vibrate?.(10);
     const willBeChecked = !(category.checked ?? false);
     await this.workspaceService.toggleCheck(this.workspaceId, category.id);
-    await this.promptAndLog(
+    const { changeId, enableComments } = await this.promptAndLog(
       category,
       willBeChecked ? 'toggle_on' : 'toggle_off',
       category.checked ?? false,
       willBeChecked,
-      willBeChecked ? 'Markeras som klar' : 'Markeras som ej klar'
     );
-    this.showUndoSnackbar(category, 'toggle');
+    this.showUndoSnackbar(category, 'toggle',
+      enableComments && changeId ? () => this.openCommentDialog(category, changeId) : undefined);
   }
 
   // ─── Inline category management ─────────────────────────
@@ -344,37 +399,14 @@ export class MainComponent {
     changeType: ChangeType,
     previousValue: number | boolean,
     newValue: number | boolean,
-    changeDescription: string
-  ): Promise<void> {
-    const [user, workspace, changes] = await Promise.all([
+  ): Promise<{ changeId: string | null; enableComments: boolean }> {
+    const [user, workspace] = await Promise.all([
       firstValueFrom(this.auth.user$),
       firstValueFrom(this.workspace$),
-      firstValueFrom(this.changes$),
     ]);
-    if (!user) return;
-
-    let comment: string | null = null;
-
-    if (workspace.enableComments) {
-      const previousComments = [
-        ...new Set(
-          changes
-            .filter(c => c.categoryId === category.id && c.comment)
-            .map(c => c.comment!)
-        ),
-      ];
-      comment = await firstValueFrom(
-        this.dialog
-          .open(CommentDialogComponent, {
-            data: { categoryName: category.name, changeDescription, previousComments },
-            width: '360px',
-          })
-          .afterClosed()
-      ) ?? null;
-    }
-
+    if (!user) return { changeId: null, enableComments: false };
     try {
-      await this.workspaceService.logChange(this.workspaceId, {
+      const changeId = await this.workspaceService.logChange(this.workspaceId, {
         workspaceId: this.workspaceId,
         categoryId: category.id,
         categoryName: category.name,
@@ -383,10 +415,27 @@ export class MainComponent {
         newValue,
         userId: user.uid,
         userEmail: user.email ?? (user.isAnonymous ? 'Gäst' : ''),
-        ...(comment ? { comment } : {}),
       });
+      return { changeId, enableComments: workspace.enableComments ?? false };
     } catch (e) {
       console.error('logChange failed:', e);
+      return { changeId: null, enableComments: false };
+    }
+  }
+
+  private async openCommentDialog(category: Category, changeId: string): Promise<void> {
+    const changes = await firstValueFrom(this.changes$);
+    const previousComments = [...new Set(
+      changes.filter(c => c.categoryId === category.id && c.comment).map(c => c.comment!)
+    )];
+    const comment = await firstValueFrom(
+      this.dialog.open(CommentDialogComponent, {
+        data: { categoryName: category.name, changeDescription: '', previousComments },
+        width: '360px',
+      }).afterClosed()
+    ) ?? null;
+    if (comment) {
+      await this.workspaceService.addComment(this.workspaceId, changeId, comment);
     }
   }
 

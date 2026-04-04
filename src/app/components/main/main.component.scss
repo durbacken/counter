@@ -1,3 +1,26 @@
+.guest-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #fff8e1;
+  color: #5d4037;
+  font-size: 13px;
+  padding: 10px 16px;
+  border-bottom: 1px solid #ffe082;
+
+  mat-icon { font-size: 18px; width: 18px; height: 18px; flex-shrink: 0; color: #f9a825; }
+  span { flex: 1; }
+  button { flex-shrink: 0; }
+}
+
+@media (prefers-color-scheme: dark) {
+  .guest-banner {
+    background: #3e2f00;
+    color: #ffe082;
+    border-bottom-color: #5d4037;
+  }
+}
+
 .toolbar {
   position: sticky;
   top: 0;

@@ -44,7 +44,15 @@ export class LoginComponent implements OnInit {
       filter(user => !!user),
       take(1),
       takeUntilDestroyed(this.destroyRef)
-    ).subscribe(() => this.router.navigate(['/']));
+    ).subscribe(() => {
+      const pending = sessionStorage.getItem('pendingJoin');
+      if (pending) {
+        sessionStorage.removeItem('pendingJoin');
+        this.router.navigateByUrl(pending);
+      } else {
+        this.router.navigate(['/']);
+      }
+    });
 
     if (this.auth.isEmailLink()) {
       const saved = this.auth.getSavedEmail();

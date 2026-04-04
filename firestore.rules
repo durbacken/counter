@@ -23,6 +23,18 @@ service cloud.firestore {
       return wsData(workspaceId).ownerId == uid();
     }
 
+    // True when the current user is joining a workspace using a valid invite token.
+    // Only the members and memberEmails fields may change, and the user may only
+    // add themselves (not remove anyone or change anything else).
+    function isJoiningWithToken() {
+      let w = resource.data;
+      let r = request.resource.data;
+      return 'inviteToken' in w &&
+        w.inviteToken != '' &&
+        r.diff(w).affectedKeys().hasOnly(['members', 'memberEmails']) &&
+        r.members.toSet() == w.members.toSet().union([uid()].toSet());
+    }
+
     // ── Users ───────────────────────────────────────────────────────
     // Any signed-in user can look up others by email (needed for invite flow).
     // Only the user themselves can write their own profile.
@@ -34,9 +46,12 @@ service cloud.firestore {
     // ── Workspaces ──────────────────────────────────────────────────
     match /workspaces/{workspaceId} {
       // Members can see a workspace; anyone can read if the owner made it public.
+      // Also allow any signed-in user to read when an inviteToken is set — they
+      // need to read the doc to validate the token before joining.
       // Use resource.data directly (not get()) so list queries pass rule validation.
       allow read: if (isAuth() && uid() in resource.data.members) ||
-                     resource.data.isPublic == true;
+                     resource.data.isPublic == true ||
+                     (isAuth() && 'inviteToken' in resource.data && resource.data.inviteToken != '');
 
       // Any signed-in user can create a workspace they own.
       allow create: if isAuth() &&
@@ -45,11 +60,13 @@ service cloud.firestore {
 
       // Owner/admin can update anything.
       // Regular members may only remove themselves (leave workspace).
+      // Any signed-in user may join if they present a valid invite token.
       allow update: if isAuth() && (
         isPrivileged(workspaceId) ||
         (isMember(workspaceId) &&
          !request.resource.data.members.hasAny([uid()]) &&
-         request.resource.data.members.size() == resource.data.members.size() - 1)
+         request.resource.data.members.size() == resource.data.members.size() - 1) ||
+        isJoiningWithToken()
       );
 
       // Only the owner can delete the workspace.
