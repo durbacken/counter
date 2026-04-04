@@ -254,9 +254,16 @@ export class WorkspaceListComponent implements OnInit, OnDestroy {
     });
   }
 
-  signOut(): void {
+  async signOut(): Promise<void> {
+    const user = await firstValueFrom(this.user$);
+    const isGuest = user?.isAnonymous ?? false;
     this.dialog.open(ConfirmDialogComponent, {
-      data: {
+      data: isGuest ? {
+        title: 'Avsluta gästläge',
+        message: 'All din data försvinner när du avslutar gästläget. Vill du fortsätta?',
+        confirmText: 'Avsluta',
+        confirmColor: 'warn',
+      } : {
         title: 'Logga ut',
         message: 'Vill du logga ut?',
         confirmText: 'Logga ut',

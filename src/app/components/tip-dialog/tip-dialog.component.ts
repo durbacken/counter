@@ -38,63 +38,99 @@ interface TipDialogData {
       } @else {
 
         <!-- ─── Share link ──────────────────────────── -->
-        <p class="section-label">Dela med vem som helst</p>
-        <button mat-stroked-button class="share-btn" (click)="shareLink()">
-          <mat-icon>share</mat-icon>
-          Dela länk
-        </button>
+        <div class="section">
+          <p class="section-label">Dela med vem som helst</p>
+          <button mat-flat-button color="primary" class="share-btn" (click)="shareLink()">
+            <mat-icon>share</mat-icon>
+            Dela länk
+          </button>
+          <p class="link-hint muted">
+            <mat-icon class="hint-icon">group</mat-icon>
+            Öppnar delningsmenyn — skicka via SMS, Mail, WhatsApp eller annat.
+          </p>
+        </div>
 
         <div class="divider"><span>eller tipsa direkt via e-post</span></div>
 
         <!-- ─── Email tip ───────────────────────────── -->
-        <p class="section-label">Skicka personligt tips</p>
-        <mat-form-field appearance="outline" class="email-field">
-          <mat-label>Mottagarens e-postadress</mat-label>
-          <input matInput [(ngModel)]="toEmail" type="email" name="tip-email"
-                 autocomplete="off" (keydown.enter)="send()"
-                 placeholder="namn&#64;exempel.se" />
-        </mat-form-field>
-        @if (error) {
-          <p class="error">{{ error }}</p>
-        }
+        <div class="section">
+          <p class="section-label">Skicka personligt tips</p>
+          <div class="invite-row">
+            <mat-form-field appearance="outline" class="invite-field">
+              <mat-label>Mottagarens e-postadress</mat-label>
+              <input matInput [(ngModel)]="toEmail" type="email" name="tip-email"
+                     autocomplete="off" (keydown.enter)="send()"
+                     placeholder="namn&#64;exempel.se" />
+            </mat-form-field>
+            <button mat-flat-button color="primary" class="invite-btn"
+                    [disabled]="!toEmail.trim() || sending"
+                    (click)="send()">
+              @if (sending) { <mat-spinner diameter="20" /> }
+              @else { Skicka }
+            </button>
+          </div>
+          @if (error) {
+            <p class="error">{{ error }}</p>
+          }
+        </div>
       }
     </mat-dialog-content>
     <mat-dialog-actions align="end">
-      <button mat-button (click)="ref.close()">{{ sent ? 'Stäng' : 'Avbryt' }}</button>
-      @if (!sent) {
-        <button mat-flat-button color="primary"
-                [disabled]="!toEmail.trim() || sending"
-                (click)="send()">
-          @if (sending) { <mat-spinner diameter="20" /> }
-          @else { Skicka }
-        </button>
-      }
+      <button mat-button (click)="ref.close()">Stäng</button>
     </mat-dialog-actions>
   `,
   styles: [`
+    .section {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      padding: 20px 0;
+    }
+
     .section-label {
       font-size: 12px;
       font-weight: 600;
       text-transform: uppercase;
       letter-spacing: 0.08em;
       color: var(--text-secondary);
-      margin: 0 0 10px;
+      margin: 0;
     }
 
     .share-btn { width: 100%; }
+
+    .link-hint {
+      display: flex;
+      align-items: flex-start;
+      gap: 6px;
+      font-size: 13px;
+      margin: 0;
+      line-height: 1.45;
+      &.muted { color: var(--text-secondary); }
+    }
+
+    .hint-icon {
+      font-size: 16px;
+      width: 16px;
+      height: 16px;
+      flex-shrink: 0;
+      margin-top: 1px;
+      color: #1976d2;
+    }
 
     .divider {
       display: flex;
       align-items: center;
       gap: 10px;
-      margin: 20px 0;
+      margin: 0;
       color: var(--text-secondary);
       font-size: 12px;
 
       &::before, &::after { content: ''; flex: 1; height: 1px; background: var(--divider); }
     }
 
-    .email-field { width: 100%; }
+    .invite-row { display: flex; gap: 8px; align-items: flex-start; }
+    .invite-field { flex: 1; }
+    .invite-btn { height: 56px; flex-shrink: 0; }
 
     .error { color: #c62828; font-size: 13px; margin: -8px 0 8px; }
 

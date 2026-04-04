@@ -35,33 +35,24 @@ interface ShareDialogData {
 
       <!-- ─── Bjud in med länk ─────────────────────── -->
       @if (data.canManage) {
-        <div class="share-section">
+        <div class="section">
           <p class="section-label">Bjud in med länk</p>
-          @if (inviteToken) {
-            <div class="link-row">
-              <span class="link-text">{{ inviteLinkUrl }}</span>
-              <button mat-icon-button (click)="copyInviteLink()" aria-label="Kopiera inbjudningslänk">
-                <mat-icon>content_copy</mat-icon>
-              </button>
-            </div>
-          }
-          <div class="invite-link-actions">
-            <button mat-stroked-button [disabled]="generatingToken" (click)="generateAndCopyInviteLink()">
-              <mat-icon>{{ inviteToken ? 'refresh' : 'link' }}</mat-icon>
-              {{ inviteToken ? 'Skapa ny länk' : 'Skapa länk' }}
-            </button>
-          </div>
+          <button mat-flat-button color="primary" class="share-invite-btn"
+                  [disabled]="generatingToken" (click)="generateAndShareInviteLink()">
+            <mat-icon>share</mat-icon>
+            Dela inbjudningslänk
+          </button>
           <p class="link-hint muted">
             <mat-icon class="hint-icon">group</mat-icon>
-            Vem som helst med länken kan gå med och delta aktivt.
+            Öppnar delningsmenyn — skicka via SMS, Mail, WhatsApp eller annat.
           </p>
         </div>
 
-        <mat-divider />
+        <div class="divider"><span>eller bjud in direkt via e-post</span></div>
       }
 
-      <!-- ─── Bjud in ────────────────────────────────── -->
-      <div class="share-section">
+      <!-- ─── Bjud in via e-post ────────────────────── -->
+      <div class="section">
         <p class="section-label">Bjud in via e-post</p>
         <div class="invite-row">
           <mat-form-field appearance="outline" class="invite-field">
@@ -79,10 +70,6 @@ interface ShareDialogData {
             Bjud in
           </button>
         </div>
-        <p class="link-hint muted">
-          <mat-icon class="hint-icon">email</mat-icon>
-          Bjud in med e-post om du vill nå en specifik person.
-        </p>
       </div>
 
     </mat-dialog-content>
@@ -91,11 +78,11 @@ interface ShareDialogData {
     </mat-dialog-actions>
   `,
   styles: [`
-    .share-section {
+    .section {
       display: flex;
       flex-direction: column;
       gap: 12px;
-      padding: 16px 0;
+      padding: 20px 0;
     }
 
     .section-label {
@@ -161,9 +148,17 @@ interface ShareDialogData {
       flex-shrink: 0;
     }
 
-    .invite-link-actions {
+    .share-invite-btn { width: 100%; }
+
+    .divider {
       display: flex;
-      gap: 8px;
+      align-items: center;
+      gap: 10px;
+      margin: 0;
+      color: var(--text-secondary);
+      font-size: 12px;
+
+      &::before, &::after { content: ''; flex: 1; height: 1px; background: var(--divider); }
     }
   `]
 })
@@ -183,21 +178,32 @@ export class ShareDialogComponent {
     return `${window.location.origin}/join/${this.data.workspaceId}/${this.inviteToken}`;
   }
 
-  async generateAndCopyInviteLink(): Promise<void> {
+  async generateAndShareInviteLink(): Promise<void> {
     this.generatingToken = true;
     try {
-      this.inviteToken = await this.workspaceService.generateInviteToken(this.data.workspaceId);
-      this.clipboard.copy(this.inviteLinkUrl);
-      this.snackBar.open('Inbjudningslänk kopierad!', undefined, { duration: 2500 });
+      if (!this.inviteToken) {
+        this.inviteToken = await this.workspaceService.generateInviteToken(this.data.workspaceId);
+      }
+      await this.shareInviteLink();
     } finally {
       this.generatingToken = false;
     }
   }
 
-  copyInviteLink(): void {
-    this.clipboard.copy(this.inviteLinkUrl);
-    this.snackBar.open('Inbjudningslänk kopierad!', undefined, { duration: 2500 });
+  async shareInviteLink(): Promise<void> {
+    const url = this.inviteLinkUrl;
+    if (navigator.share) {
+      await navigator.share({
+        title: this.data.workspace.title,
+        text: `Gå med i "${this.data.workspace.title}" på Koll på läget?`,
+        url,
+      }).catch(() => {});
+    } else {
+      this.clipboard.copy(url);
+      this.snackBar.open('Inbjudningslänk kopierad!', undefined, { duration: 2500 });
+    }
   }
+
 
   async inviteMember(): Promise<void> {
     const email = this.inviteEmail.trim();
