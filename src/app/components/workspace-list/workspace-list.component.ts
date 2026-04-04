@@ -241,6 +241,15 @@ export class WorkspaceListComponent implements OnInit, OnDestroy {
   }
 
   signOut(): void {
-    this.auth.signOut();
+    this.dialog.open(ConfirmDialogComponent, {
+      data: {
+        title: 'Logga ut',
+        message: 'Vill du logga ut?',
+        confirmText: 'Logga ut',
+        confirmColor: 'warn',
+      }
+    }).afterClosed().subscribe(confirmed => {
+      if (confirmed) this.auth.signOut();
+    });
   }
 }
