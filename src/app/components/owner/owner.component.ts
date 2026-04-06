@@ -95,8 +95,12 @@ export class OwnerComponent implements OnInit {
         id: d.id,
       }));
 
-      // Fetch changes for each workspace in parallel, build email -> most recent activity map
+      // Fetch changes for each workspace in parallel
+      // Build: email -> global most recent { at, workspaceId }
+      //        email -> workspaceId -> most recent Date (for per-workspace display)
       const lastActivityByEmail = new Map<string, { at: Date; workspaceId: string }>();
+      const activityPerUserPerWs = new Map<string, Map<string, Date>>(); // email -> wsId -> Date
+
       const allChangeSnaps = await Promise.all(
         workspaces.map(ws =>
           getDocs(collection(this.firestore, 'workspaces', ws.id, 'changes')).catch(() => null)
@@ -111,9 +115,19 @@ export class OwnerComponent implements OnInit {
           if (!email) continue;
           const ts = data['timestamp'];
           const at: Date = ts?.toDate?.() ?? new Date(ts);
+
+          // Global most recent per user
           const existing = lastActivityByEmail.get(email);
           if (!existing || at.getTime() > existing.at.getTime()) {
             lastActivityByEmail.set(email, { at, workspaceId });
+          }
+
+          // Per-workspace most recent per user
+          if (!activityPerUserPerWs.has(email)) activityPerUserPerWs.set(email, new Map());
+          const wsMap = activityPerUserPerWs.get(email)!;
+          const existingWs = wsMap.get(workspaceId);
+          if (!existingWs || at.getTime() > existingWs.getTime()) {
+            wsMap.set(workspaceId, at);
           }
         }
       });
@@ -131,6 +145,8 @@ export class OwnerComponent implements OnInit {
         const lastActivityAt = activity?.at ?? null;
         const lastActivityWorkspace = activity ? (wsTitle.get(activity.workspaceId) ?? null) : null;
 
+        const userWsActivity = activityPerUserPerWs.get(user.email);
+
         const workspaceSummaries: WorkspaceSummary[] = mine
           .map(ws => ({
             id: ws.id,
@@ -138,9 +154,7 @@ export class OwnerComponent implements OnInit {
             mode: (ws.mode ?? 'counter') as 'counter' | 'checkbox',
             categories: ws.categories?.length ?? 0,
             isOwner: ws.ownerId === user.uid,
-            lastActivityAt: ws.lastActivityAt
-              ? (ws.lastActivityAt?.toDate?.() ?? new Date(ws.lastActivityAt))
-              : null,
+            lastActivityAt: userWsActivity?.get(ws.id) ?? null,
           }))
           .sort((a, b) => {
             if (!a.lastActivityAt) return 1;

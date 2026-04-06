@@ -87,7 +87,11 @@ service cloud.firestore {
         allow create: if isAuth() &&
           isMember(workspaceId) &&
           request.resource.data.userId == uid();
-        allow update, delete: if false;
+        allow update: if isAuth() &&
+          isMember(workspaceId) &&
+          resource.data.userId == uid() &&
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['comment']);
+        allow delete: if isAuth() && isOwner(workspaceId);
       }
     }
 

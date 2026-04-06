@@ -1,4 +1,4 @@
-import { Component, DestroyRef, OnDestroy, OnInit, ViewChild, inject, signal } from '@angular/core';
+import { Component, DestroyRef, ViewChild, inject } from '@angular/core';
 import { AsyncPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -28,51 +28,13 @@ import { FooterComponent } from '../footer/footer.component';
 import { Category, ChangeEvent, ChangeType, Workspace } from '../../models/counter.model';
 
 @Component({
-  selector: 'app-undo-snackbar',
+  selector: 'app-comment-snackbar',
   standalone: true,
   imports: [],
   template: `
     <span class="snack-msg">{{ data.message }}</span>
     <span class="snack-actions">
-      <button class="snack-btn" (click)="ref.dismissWithAction()">Ångra</button>
-      <span class="snack-countdown">{{ countdown() }}s</span>
-      <button class="snack-btn snack-dismiss" (click)="ref.dismiss()" aria-label="Stäng">✕</button>
-    </span>
-  `,
-  styles: [`:host { display:flex; align-items:center; justify-content:space-between; width:100%; gap:8px; box-sizing:border-box; }
-    .snack-msg { flex:1; font-size:14px; }
-    .snack-actions { display:flex; align-items:center; flex-shrink:0; gap:2px; }
-    .snack-btn { background:none; border:none; color:inherit; cursor:pointer; font-size:14px; font-weight:500; letter-spacing:.04em; text-transform:uppercase; padding:0 8px; line-height:1; font-family:inherit; }
-    .snack-countdown { font-size:11px; opacity:0.55; min-width:22px; text-align:center; }
-    .snack-dismiss { font-size:16px; text-transform:none; letter-spacing:0; padding:0 4px; opacity:0.7; }`]
-})
-export class UndoSnackbarComponent implements OnInit, OnDestroy {
-  readonly data = inject<{ message: string }>(MAT_SNACK_BAR_DATA);
-  readonly ref = inject(MatSnackBarRef);
-  readonly countdown = signal(8);
-  private timer?: ReturnType<typeof setInterval>;
-
-  ngOnInit(): void {
-    this.timer = setInterval(() => {
-      const next = this.countdown() - 1;
-      this.countdown.set(next);
-      if (next <= 0) clearInterval(this.timer);
-    }, 1000);
-  }
-
-  ngOnDestroy(): void {
-    clearInterval(this.timer);
-  }
-}
-
-@Component({
-  selector: 'app-comment-snackbar',
-  standalone: true,
-  imports: [],
-  template: `
-    <span class="snack-msg">Vill du lägga till en anteckning?</span>
-    <span class="snack-actions">
-      <button class="snack-btn snack-add" (click)="ref.dismissWithAction()">Lägg till</button>
+      <button class="snack-btn" (click)="comment()">Kommentera?</button>
       <button class="snack-btn snack-dismiss" (click)="ref.dismiss()" aria-label="Stäng">✕</button>
     </span>
   `,
@@ -83,7 +45,13 @@ export class UndoSnackbarComponent implements OnInit, OnDestroy {
     .snack-dismiss { font-size:16px; text-transform:none; letter-spacing:0; padding:0 4px; opacity:0.7; }`]
 })
 export class CommentSnackbarComponent {
+  readonly data = inject<{ message: string; onComment: () => void }>(MAT_SNACK_BAR_DATA);
   readonly ref = inject(MatSnackBarRef);
+
+  comment(): void {
+    this.ref.dismiss();
+    this.data.onComment();
+  }
 }
 
 @Component({
@@ -188,9 +156,6 @@ export class MainComponent {
     this.closeAddPanel();
   }
 
-  // ─── Undo ───────────────────────────────────────────────
-  private lastUndoAction: { categoryId: string; action: 'increment' | 'decrement' | 'toggle' | 'reset-category'; previousCount?: number } | null = null;
-
   // ─── Inline edit ────────────────────────────────────────
   editMode = false;
   editingCategoryId: string | null = null;
@@ -225,43 +190,13 @@ export class MainComponent {
     return this.route.snapshot.paramMap.get('id')!;
   }
 
-  // ─── Undo snackbar ──────────────────────────────────────
+  // ─── Comment snackbar ───────────────────────────────────
 
-  private showUndoSnackbar(
-    category: Category,
-    action: 'increment' | 'decrement' | 'toggle',
-    openComment?: () => void,
-  ): void {
-    this.lastUndoAction = { categoryId: category.id, action };
-    const ref = this.snackBar.openFromComponent(UndoSnackbarComponent, {
-      data: { message: `${category.name} ändrad` },
-      duration: 8000,
+  private showCommentSnackbar(message: string, openComment: () => void): void {
+    this.snackBar.openFromComponent(CommentSnackbarComponent, {
+      data: { message, onComment: openComment },
+      duration: 6000,
     });
-    ref.onAction().subscribe(() => this.undoLastAction());
-    if (openComment) {
-      ref.afterDismissed().subscribe(({ dismissedByAction }) => {
-        if (dismissedByAction) return; // user tapped Ångra — don't offer comment
-        const commentRef = this.snackBar.openFromComponent(CommentSnackbarComponent, {
-          duration: 0, // stays until dismissed
-        });
-        commentRef.onAction().subscribe(() => openComment());
-      });
-    }
-  }
-
-  private async undoLastAction(): Promise<void> {
-    if (!this.lastUndoAction) return;
-    const { categoryId, action, previousCount } = this.lastUndoAction;
-    this.lastUndoAction = null;
-    if (action === 'increment') {
-      await this.workspaceService.decrement(this.workspaceId, categoryId);
-    } else if (action === 'decrement') {
-      await this.workspaceService.increment(this.workspaceId, categoryId);
-    } else if (action === 'reset-category' && previousCount !== undefined) {
-      await this.workspaceService.setCategoryCount(this.workspaceId, categoryId, previousCount);
-    } else {
-      await this.workspaceService.toggleCheck(this.workspaceId, categoryId);
-    }
   }
 
   // ─── Counter / checkbox actions ─────────────────────────
@@ -272,8 +207,8 @@ export class MainComponent {
     const next = prev + 1;
     await this.workspaceService.increment(this.workspaceId, category.id);
     const { changeId, enableComments } = await this.promptAndLog(category, 'increment', prev, next);
-    this.showUndoSnackbar(category, 'increment',
-      enableComments && changeId ? () => this.openCommentDialog(category, changeId) : undefined);
+    if (enableComments && changeId)
+      this.showCommentSnackbar(category.name, () => this.openCommentDialog(category, changeId));
   }
 
   async decrement(category: Category): Promise<void> {
@@ -283,8 +218,8 @@ export class MainComponent {
     const next = Math.max(0, prev - 1);
     await this.workspaceService.decrement(this.workspaceId, category.id);
     const { changeId, enableComments } = await this.promptAndLog(category, 'decrement', prev, next);
-    this.showUndoSnackbar(category, 'decrement',
-      enableComments && changeId ? () => this.openCommentDialog(category, changeId) : undefined);
+    if (enableComments && changeId)
+      this.showCommentSnackbar(category.name, () => this.openCommentDialog(category, changeId));
   }
 
   resetCategory(category: Category): void {
@@ -294,22 +229,10 @@ export class MainComponent {
     }).afterClosed().subscribe(async confirmed => {
       if (!confirmed) return;
       const prev = category.count;
-      this.lastUndoAction = { categoryId: category.id, action: 'reset-category', previousCount: prev };
       await this.workspaceService.setCategoryCount(this.workspaceId, category.id, 0);
       const { changeId, enableComments } = await this.promptAndLog(category, 'decrement', prev, 0);
-      const openComment = enableComments && changeId ? () => this.openCommentDialog(category, changeId) : undefined;
-      const ref = this.snackBar.openFromComponent(UndoSnackbarComponent, {
-        data: { message: `${category.name} nollställd` },
-        duration: 8000,
-      });
-      ref.onAction().subscribe(() => this.undoLastAction());
-      if (openComment) {
-        ref.afterDismissed().subscribe(({ dismissedByAction }) => {
-          if (dismissedByAction) return;
-          const commentRef = this.snackBar.openFromComponent(CommentSnackbarComponent, { duration: 0 });
-          commentRef.onAction().subscribe(() => openComment());
-        });
-      }
+      if (enableComments && changeId)
+        this.showCommentSnackbar(`${category.name} nollställd`, () => this.openCommentDialog(category, changeId));
     });
   }
 
@@ -323,8 +246,8 @@ export class MainComponent {
       category.checked ?? false,
       willBeChecked,
     );
-    this.showUndoSnackbar(category, 'toggle',
-      enableComments && changeId ? () => this.openCommentDialog(category, changeId) : undefined);
+    if (enableComments && changeId)
+      this.showCommentSnackbar(category.name, () => this.openCommentDialog(category, changeId));
   }
 
   // ─── Inline category management ─────────────────────────
